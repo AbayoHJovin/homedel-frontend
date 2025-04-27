@@ -1,0 +1,17 @@
+{
+    "rewrites": [
+      { "source": "/", "destination": "/index.html" },
+      { "source": "/about", "destination": "/index.html" },
+      { "source": "/shop", "destination": "/index.html" },
+      { "source": "/contacts", "destination": "/index.html" },
+      { "source": "/admin", "destination": "/index.html" },
+      { "source": "/account", "destination": "/index.html" },
+      { "source": "/login", "destination": "/index.html" },
+      { "source": "/signup", "destination": "/index.html" },
+      { "source": "/checkout/:amount", "destination": "/index.html" },
+      { "source": "/product/:prodId", "destination": "/index.html" },
+      { "source": "/cart", "destination": "/index.html" },
+      { "source": "/(.*)", "destination": "/index.html" }
+    ]
+  }
+  

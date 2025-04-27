@@ -1,0 +1,1 @@
+export const provinces = ["East", "West", "North", "South", "Kigali"]; 
