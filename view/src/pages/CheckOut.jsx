@@ -1,12 +1,14 @@
 import { useState, useContext, useEffect } from "react";
 import { CgInfo } from "react-icons/cg";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ThemeContext } from "../../constants/ThemeContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CurrentUserContext } from "../../constants/currentUser";
 import { CartContext } from "../../constants/cartItems";
 import { toast, ToastContainer } from "react-toastify";
 import rwandaData from "../../constants/rwanda";
+import UserLocation from "../components/UserLocation";
+import { apiUrl } from "../lib/apis";
 
 const OrderForm = () => {
   const { theme } = useContext(ThemeContext);
@@ -19,12 +21,13 @@ const OrderForm = () => {
     sector: "",
     cell: "",
     village: "",
+    street: "",
     termsAccepted: false,
   });
-  const availableProvinces = rwandaData.data.map((provinceObj) =>
-    Object.keys(provinceObj)[0]
+  const availableProvinces = rwandaData.data.map(
+    (provinceObj) => Object.keys(provinceObj)[0]
   );
-
+  console.log(currentUser);
   const [availableDistricts, setAvailableDistricts] = useState([]);
   const [availableSectors, setAvailableSectors] = useState([]);
   const [availableCells, setAvailableCells] = useState([]);
@@ -35,6 +38,7 @@ const OrderForm = () => {
   const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   useEffect(() => {
     if (!currentUser || !itemsOnCart) {
@@ -59,8 +63,8 @@ const OrderForm = () => {
     const provinceObj = rwandaData.data.find((item) => item[provinceName]);
     if (provinceObj) {
       // provinceObj[provinceName] is an array of district objects.
-      return provinceObj[provinceName].map((districtObj) =>
-        Object.keys(districtObj)[0]
+      return provinceObj[provinceName].map(
+        (districtObj) => Object.keys(districtObj)[0]
       );
     }
     return [];
@@ -74,8 +78,8 @@ const OrderForm = () => {
       );
       if (districtObj) {
         // districtObj[districtName] is an array of sector objects.
-        return districtObj[districtName].map((sectorObj) =>
-          Object.keys(sectorObj)[0]
+        return districtObj[districtName].map(
+          (sectorObj) => Object.keys(sectorObj)[0]
         );
       }
     }
@@ -89,13 +93,11 @@ const OrderForm = () => {
         (d) => d[districtName]
       );
       if (districtObj) {
-        const sectorObj = districtObj[districtName].find(
-          (s) => s[sectorName]
-        );
+        const sectorObj = districtObj[districtName].find((s) => s[sectorName]);
         if (sectorObj) {
           // sectorObj[sectorName] is an array of cell objects.
-          return sectorObj[sectorName].map((cellObj) =>
-            Object.keys(cellObj)[0]
+          return sectorObj[sectorName].map(
+            (cellObj) => Object.keys(cellObj)[0]
           );
         }
       }
@@ -110,13 +112,9 @@ const OrderForm = () => {
         (d) => d[districtName]
       );
       if (districtObj) {
-        const sectorObj = districtObj[districtName].find(
-          (s) => s[sectorName]
-        );
+        const sectorObj = districtObj[districtName].find((s) => s[sectorName]);
         if (sectorObj) {
-          const cellObj = sectorObj[sectorName].find(
-            (c) => c[cellName]
-          );
+          const cellObj = sectorObj[sectorName].find((c) => c[cellName]);
           if (cellObj) {
             // cellObj[cellName] is an array of village names.
             return cellObj[cellName];
@@ -169,7 +167,9 @@ const OrderForm = () => {
       cell: "",
       village: "",
     }));
-    setAvailableCells(getCells(formData.province, formData.district, selectedSector));
+    setAvailableCells(
+      getCells(formData.province, formData.district, selectedSector)
+    );
     setAvailableVillages([]);
   };
 
@@ -181,7 +181,12 @@ const OrderForm = () => {
       village: "",
     }));
     setAvailableVillages(
-      getVillages(formData.province, formData.district, formData.sector, selectedCell)
+      getVillages(
+        formData.province,
+        formData.district,
+        formData.sector,
+        selectedCell
+      )
     );
   };
 
@@ -216,6 +221,7 @@ const OrderForm = () => {
       sector,
       cell,
       village,
+      street,
       termsAccepted,
     } = formData;
 
@@ -225,28 +231,51 @@ const OrderForm = () => {
     if (!sector) errors.sector = "Sector is required";
     if (!cell) errors.cell = "Cell is required";
     if (!village) errors.village = "Village is required";
+    if (!street) errors.street = "Street is required";
     if (!termsAccepted)
       errors.termsAccepted = "You must accept the terms and conditions";
 
     return errors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      console.log("form error", errors);
-    } else {
-      console.log("no error!");
-      // Check for required data
-      if (!currentUser || !formData || !productsId || !subtotal) {
-        toast.error("Missing required information!");
-        return;
-      }
+      toast.error("Please fill in all required fields correctly");
+      return;
+    }
 
-      const dataToSend = {
-        userId: currentUser.userId,
+    // Check for required data
+    if (!currentUser) {
+      toast.error("Please log in to continue");
+      navigate("/login");
+      return;
+    }
+
+    if (!itemsOnCart || itemsOnCart.length === 0) {
+      toast.error("Your cart is empty");
+      navigate("/cart");
+      return;
+    }
+
+    if (!cost) {
+      toast.error("Invalid order amount");
+      navigate("/cart");
+      return;
+    }
+
+    // Check if location is selected
+    if (!selectedLocation) {
+      toast.error("Please select a delivery location on the map");
+      return;
+    }
+
+    try {
+      const orderData = {
+        phoneNo: formData.phone,
+        price: cost,
         address: [
           formData.province,
           formData.district,
@@ -254,13 +283,44 @@ const OrderForm = () => {
           formData.cell,
           formData.village,
         ].join("-"),
-        phoneNo: formData.phone,
-        price: subtotal,
+        street: formData.street,
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng,
+        mapAddress: selectedLocation.address,
         products: productsId,
         orderDate: `${currentDate} ${currentTime}`,
       };
 
-      navigate("/paymentPage", { state: { amount: subtotal, dataToSend } });
+      // Create the order first
+      const response = await fetch(`${apiUrl}/addOffer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUser.userId,
+          orderData,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create order");
+      }
+
+      // If order is created successfully, navigate to payment page
+      navigate("/paymentPage", {
+        state: {
+          amount: cost,
+          orderId: data.order.orderId,
+          phoneNumber: formData.phone,
+          dataToSend: true,
+        },
+      });
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toast.error(error.message || "Failed to create order. Please try again.");
     }
   };
 
@@ -268,7 +328,8 @@ const OrderForm = () => {
   const { cartTotal: subtotal } = location.state || {};
   useEffect(() => {
     if (!subtotal) {
-      navigate(-1);
+      toast.error("Invalid cart total. Please try again.");
+      navigate("/cart");
     } else {
       setCost(subtotal);
     }
@@ -276,32 +337,44 @@ const OrderForm = () => {
 
   const formattedCost = new Intl.NumberFormat("en-US").format(cost);
 
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    // Update form data with the selected location
+    setFormData((prev) => ({
+      ...prev,
+      deliveryAddress: location.address,
+      latitude: location.lat,
+      longitude: location.lng,
+      mapAddress: location.address,
+    }));
+  };
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
+      className={`min-h-screen ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
     >
       <ToastContainer position="top-center" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className={`flex flex-col lg:flex-row items-start gap-8 ${
-            theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-          }`}
+          className={`${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
         >
           {/* Order Form */}
-          <motion.form 
-            className="flex-1 w-full bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 sm:p-8"
+          <motion.form
+            className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 sm:p-8"
             initial={{ x: -20 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <motion.h2 
-              className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8"
+            <motion.h2
+              className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center"
               initial={{ y: -10 }}
               animate={{ y: 0 }}
             >
@@ -309,7 +382,7 @@ const OrderForm = () => {
             </motion.h2>
 
             {/* Personal Details Section */}
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -330,7 +403,7 @@ const OrderForm = () => {
                     onChange={handleChange}
                   />
                   {formErrors.phone && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-2"
@@ -343,7 +416,7 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Delivery Address Section */}
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -352,7 +425,53 @@ const OrderForm = () => {
               <h3 className="text-xl font-semibold text-green-600 dark:text-green-400 mb-6">
                 Delivery Address
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* Location Instructions */}
+              <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-blue-700 dark:text-blue-400 mb-2">
+                  How to select your delivery location
+                </h4>
+                <ul className="list-disc list-inside space-y-2 text-blue-600 dark:text-blue-300">
+                  <li>
+                    Search for a nearby shopping center, landmark, or your exact
+                    location
+                  </li>
+                  <li>
+                    Use the map to drag the marker to your precise delivery
+                    point
+                  </li>
+                  <li>You can also use the "Use Current Location" feature</li>
+                  <li>
+                    Make sure to select a location that&apos;s easily accessible
+                    for delivery
+                  </li>
+                </ul>
+              </div>
+
+              {/* Location Picker */}
+              <div className="mb-6">
+                <UserLocation onLocationSelect={handleLocationSelect} />
+              </div>
+
+              {/* Address Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Street input */}
+                <div className="relative sm:col-span-2">
+                  <input
+                    className="w-full p-4 outline-none rounded-lg border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100 focus:border-green-500 transition-all duration-300 ease-in-out"
+                    type="text"
+                    placeholder="Street name, number, or landmarks"
+                    name="street"
+                    value={formData.street}
+                    onChange={handleChange}
+                  />
+                  {formErrors.street && (
+                    <motion.p className="text-red-500 text-sm mt-2">
+                      {formErrors.street}
+                    </motion.p>
+                  )}
+                </div>
+
                 {/* Province select */}
                 <div className="relative">
                   <select
@@ -361,17 +480,17 @@ const OrderForm = () => {
                     value={formData.province}
                     onChange={handleProvinceChange}
                   >
-                    <option value="" disabled>Select a province</option>
+                    <option value="" disabled>
+                      Select a province
+                    </option>
                     {availableProvinces.map((province, index) => (
-                      <option key={index} value={province}>{province}</option>
+                      <option key={index} value={province}>
+                        {province}
+                      </option>
                     ))}
                   </select>
                   {formErrors.province && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-2"
-                    >
+                    <motion.p className="text-red-500 text-sm mt-2">
                       {formErrors.province}
                     </motion.p>
                   )}
@@ -387,18 +506,18 @@ const OrderForm = () => {
                     disabled={!formData.province}
                   >
                     <option value="" disabled>
-                      {formData.province ? "Select a district" : "Select a province first"}
+                      {formData.province
+                        ? "Select a district"
+                        : "Select a province first"}
                     </option>
                     {availableDistricts.map((district, index) => (
-                      <option key={index} value={district}>{district}</option>
+                      <option key={index} value={district}>
+                        {district}
+                      </option>
                     ))}
                   </select>
                   {formErrors.district && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-2"
-                    >
+                    <motion.p className="text-red-500 text-sm mt-2">
                       {formErrors.district}
                     </motion.p>
                   )}
@@ -414,18 +533,18 @@ const OrderForm = () => {
                     disabled={!formData.district}
                   >
                     <option value="" disabled>
-                      {formData.district ? "Select a sector" : "Select a district first"}
+                      {formData.district
+                        ? "Select a sector"
+                        : "Select a district first"}
                     </option>
                     {availableSectors.map((sector, index) => (
-                      <option key={index} value={sector}>{sector}</option>
+                      <option key={index} value={sector}>
+                        {sector}
+                      </option>
                     ))}
                   </select>
                   {formErrors.sector && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-2"
-                    >
+                    <motion.p className="text-red-500 text-sm mt-2">
                       {formErrors.sector}
                     </motion.p>
                   )}
@@ -441,25 +560,25 @@ const OrderForm = () => {
                     disabled={!formData.sector}
                   >
                     <option value="" disabled>
-                      {formData.sector ? "Select a cell" : "Select a sector first"}
+                      {formData.sector
+                        ? "Select a cell"
+                        : "Select a sector first"}
                     </option>
                     {availableCells.map((cell, index) => (
-                      <option key={index} value={cell}>{cell}</option>
+                      <option key={index} value={cell}>
+                        {cell}
+                      </option>
                     ))}
                   </select>
                   {formErrors.cell && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-2"
-                    >
+                    <motion.p className="text-red-500 text-sm mt-2">
                       {formErrors.cell}
                     </motion.p>
                   )}
                 </div>
 
                 {/* Village select */}
-                <div className="relative">
+                <div className="relative sm:col-span-2">
                   <select
                     className="w-full p-4 outline-none rounded-lg border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100 focus:border-green-500 transition-all duration-300 ease-in-out appearance-none"
                     name="village"
@@ -468,18 +587,18 @@ const OrderForm = () => {
                     disabled={!formData.cell}
                   >
                     <option value="" disabled>
-                      {formData.cell ? "Select a village" : "Select a cell first"}
+                      {formData.cell
+                        ? "Select a village"
+                        : "Select a cell first"}
                     </option>
                     {availableVillages.map((village, index) => (
-                      <option key={index} value={village}>{village}</option>
+                      <option key={index} value={village}>
+                        {village}
+                      </option>
                     ))}
                   </select>
                   {formErrors.village && (
-                    <motion.p 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-500 text-sm mt-2"
-                    >
+                    <motion.p className="text-red-500 text-sm mt-2">
                       {formErrors.village}
                     </motion.p>
                   )}
@@ -488,7 +607,7 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Amount to pay Section */}
-            <motion.div 
+            <motion.div
               className="mb-8 bg-green-50 dark:bg-gray-700 p-6 rounded-xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -503,7 +622,7 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Terms and Conditions */}
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -521,18 +640,14 @@ const OrderForm = () => {
                 </span>
               </label>
               {formErrors.termsAccepted && (
-                <motion.p 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-red-500 text-sm mt-2"
-                >
+                <motion.p className="text-red-500 text-sm mt-2">
                   {formErrors.termsAccepted}
                 </motion.p>
               )}
             </motion.div>
 
             {/* Important Information Section */}
-            <motion.div 
+            <motion.div
               className="mb-8 bg-red-50 dark:bg-gray-700/50 p-6 rounded-xl flex items-start space-x-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -540,14 +655,15 @@ const OrderForm = () => {
             >
               <CgInfo className="text-3xl text-red-500 flex-shrink-0" />
               <p className="text-gray-700 dark:text-gray-300 text-sm">
-                Note that after you click on complete purchase, you will be called
-                shortly on the phone number you entered. You will pay using the
-                method provided after getting your products. In case of any issues,
-                call or WhatsApp us on <span className="font-semibold">+250798509561</span>.
+                Note that after you click on complete purchase, you will be
+                called shortly on the phone number you entered. You will pay
+                using the method provided after getting your products. In case
+                of any issues, call or WhatsApp us on{" "}
+                <span className="font-semibold">+250798509561</span>.
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="flex flex-col sm:flex-row justify-end gap-4 mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -568,20 +684,6 @@ const OrderForm = () => {
               </button>
             </motion.div>
           </motion.form>
-
-          {/* Right side image */}
-          <motion.div 
-            className="hidden lg:block w-1/3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <img
-              src="/confirmImage.png"
-              alt="payment"
-              className="w-full h-auto rounded-2xl shadow-lg"
-            />
-          </motion.div>
         </motion.div>
       </div>
     </motion.div>

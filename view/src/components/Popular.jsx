@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useProducts from "../../constants/products";
 import PopularProductCard from "./PopularProductCard";
@@ -9,52 +9,58 @@ const Popular = () => {
   const { products, loading } = useProducts();
   const [displayedProducts, setDisplayedProducts] = useState([]);
 
-  useEffect(() => {
-    if (products && !loading) {
-      // Check if we have cached products and they're not expired
-      const cached = localStorage.getItem("popularProducts");
-      const cacheTimestamp = localStorage.getItem("popularProductsTimestamp");
-      const CACHE_DURATION = 1000 * 60 * 60; // 1 hour in milliseconds
-
-      if (
-        cached &&
-        cacheTimestamp &&
-        Date.now() - Number(cacheTimestamp) < CACHE_DURATION
-      ) {
-        setDisplayedProducts(JSON.parse(cached));
-        return;
-      }
-
-      // Filter popular products
-      const popularProducts = products.filter((product) => product.popular);
-
-      // If we have more than 4 popular products, randomly select 4
-      if (popularProducts.length > 4) {
-        const randomProducts = [];
-        const tempProducts = [...popularProducts];
-
-        for (let i = 0; i < 4; i++) {
-          const randomIndex = Math.floor(Math.random() * tempProducts.length);
-          randomProducts.push(tempProducts[randomIndex]);
-          tempProducts.splice(randomIndex, 1);
-        }
-
-        // Cache the selected products
-        localStorage.setItem("popularProducts", JSON.stringify(randomProducts));
-        localStorage.setItem("popularProductsTimestamp", Date.now().toString());
-        setDisplayedProducts(randomProducts);
-      } else {
-        // If 4 or fewer products, show all of them
-        localStorage.setItem(
-          "popularProducts",
-          JSON.stringify(popularProducts)
-        );
-        localStorage.setItem("popularProductsTimestamp", Date.now().toString());
-        setDisplayedProducts(popularProducts);
-      }
+  const getRandomProducts = useCallback((popularProducts) => {
+    if (popularProducts.length <= 4) {
+      return popularProducts;
     }
-  }, [products, loading]);
 
+    const randomProducts = [];
+    const tempProducts = [...popularProducts];
+
+    for (let i = 0; i < 4; i++) {
+      const randomIndex = Math.floor(Math.random() * tempProducts.length);
+      randomProducts.push(tempProducts[randomIndex]);
+      tempProducts.splice(randomIndex, 1);
+    }
+
+    return randomProducts;
+  }, []);
+  useEffect(() => {
+    if (!products || loading) return;
+  
+    const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+    const cached = localStorage.getItem("popularProducts");
+    const cacheTimestamp = localStorage.getItem("popularProductsTimestamp");
+  
+    if (
+      cached &&
+      cacheTimestamp &&
+      Date.now() - Number(cacheTimestamp) < CACHE_DURATION
+    ) {
+      const cachedProducts = JSON.parse(cached);
+  
+      // Avoid setting state if data is already the same
+      setDisplayedProducts((prev) => {
+        const same =
+          JSON.stringify(prev) === JSON.stringify(cachedProducts);
+        return same ? prev : cachedProducts;
+      });
+  
+      return;
+    }
+  
+    const popularProducts = products.filter((product) => product.popular);
+    const selectedProducts = getRandomProducts(popularProducts);
+  
+    localStorage.setItem("popularProducts", JSON.stringify(selectedProducts));
+    localStorage.setItem("popularProductsTimestamp", Date.now().toString());
+  
+    setDisplayedProducts((prev) => {
+      const same = JSON.stringify(prev) === JSON.stringify(selectedProducts);
+      return same ? prev : selectedProducts;
+    });
+  }, [products, loading, getRandomProducts]);
+  
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -100,7 +106,7 @@ const Popular = () => {
             className="text-center py-12"
           >
             <p className="text-gray-600 dark:text-gray-400">
-              No new arrivals at the moment. Check back soon!
+              No popular products available at the moment. Check back soon!
             </p>
           </motion.div>
         )}

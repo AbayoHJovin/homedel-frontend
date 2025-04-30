@@ -32,7 +32,7 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
         message.success({
           content: "Payment request sent successfully!",
           className: "custom-message success",
-          style: { marginTop: '20vh' },
+          style: { marginTop: "20vh" },
         });
         setIsModalVisible(false);
         const re = await addOrder(
@@ -46,7 +46,7 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
         message.error({
           content: "Something went wrong. Please try again.",
           className: "custom-message error",
-          style: { marginTop: '20vh' },
+          style: { marginTop: "20vh" },
         });
         console.error(`Error: ${response.data.error || response.data.message}`);
       }
@@ -54,7 +54,7 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
       message.error({
         content: "Something went wrong. Please try again.",
         className: "custom-message error",
-        style: { marginTop: '20vh' },
+        style: { marginTop: "20vh" },
       });
       console.error(`Unexpected Error: ${error.message}`);
     } finally {
@@ -82,9 +82,9 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/50 to-yellow-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="flex items-center space-x-4 relative z-10">
           <div className="flex-shrink-0 bg-white p-2 rounded-lg shadow-md">
-            <img 
-              src="/momo.jpg" 
-              alt="MTN MoMo" 
+            <img
+              src="/momo.jpg"
+              alt="MTN MoMo"
               className="w-10 h-10 object-contain"
             />
           </div>
@@ -115,15 +115,17 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
         className="custom-modal"
         centered
       >
-        <Form 
-          form={form} 
-          onFinish={handlePaymentRequest} 
+        <Form
+          form={form}
+          onFinish={handlePaymentRequest}
           layout="vertical"
           className="px-2 py-4"
         >
           {/* Amount Display */}
           <div className="mb-6 bg-green-50 rounded-xl p-6 text-center">
-            <p className="text-sm text-green-600 font-medium mb-2">Amount to Pay</p>
+            <p className="text-sm text-green-600 font-medium mb-2">
+              Amount to Pay
+            </p>
             <div className="flex items-center justify-center space-x-2">
               <FaMoneyBillWave className="text-2xl text-green-600" />
               <span className="text-3xl font-bold text-green-700 font-poppins">
@@ -142,7 +144,10 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
             name="phoneNumber"
             rules={[
               { required: true, message: "Please enter your phone number!" },
-              { pattern: /^07[89]\d{7}$/, message: "Please enter a valid MTN number!" }
+              {
+                pattern: /^7[89]\d{7}$/,
+                message: "Please enter a valid MTN number!",
+              },
             ]}
           >
             <Input
@@ -151,7 +156,7 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
               placeholder="7X XXX XXXX"
               className="h-12 text-lg font-poppins"
               style={{
-                borderRadius: '0.75rem',
+                borderRadius: "0.75rem",
               }}
             />
           </Form.Item>
@@ -164,9 +169,10 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
               whileTap={{ scale: 0.98 }}
               className={`
                 w-full py-4 rounded-xl text-white text-lg font-semibold font-poppins
-                ${isLoading 
-                  ? 'bg-green-600/70 cursor-not-allowed' 
-                  : 'bg-green-600 hover:bg-green-700 transform transition-all duration-300'
+                ${
+                  isLoading
+                    ? "bg-green-600/70 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 transform transition-all duration-300"
                 }
               `}
               disabled={isLoading}
@@ -177,7 +183,7 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
                   <span>Processing...</span>
                 </div>
               ) : (
-                'Confirm Payment'
+                "Confirm Payment"
               )}
             </motion.button>
           </Form.Item>
@@ -190,29 +196,29 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
           border-radius: 1rem;
           overflow: hidden;
         }
-        
+
         .custom-modal .ant-modal-header {
           border-bottom: none;
           padding: 0;
         }
-        
+
         .custom-modal .ant-modal-body {
           padding: 0;
         }
-        
+
         .custom-modal .ant-input-affix-wrapper {
           padding: 0.75rem 1rem;
           border-radius: 0.75rem;
           border: 2px solid #e5e7eb;
         }
-        
+
         .custom-modal .ant-input-affix-wrapper:hover,
         .custom-modal .ant-input-affix-wrapper:focus,
         .custom-modal .ant-input-affix-wrapper-focused {
           border-color: #059669;
           box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.1);
         }
-        
+
         .custom-modal .ant-form-item-explain-error {
           font-size: 0.875rem;
           margin-top: 0.5rem;
@@ -220,12 +226,12 @@ const MtnMoMoButton = ({ amount, data: orderData }) => {
         }
 
         @font-face {
-          font-family: 'Poppins';
-          src: url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+          font-family: "Poppins";
+          src: url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
         }
 
         .font-poppins {
-          font-family: 'Poppins', sans-serif;
+          font-family: "Poppins", sans-serif;
         }
       `}</style>
     </div>

@@ -83,7 +83,7 @@ const PersonalDetails = () => {
         const data = response.data;
         setIsEditing(false);
         sessionStorage.setItem(
-          "User",
+          "user",
           JSON.stringify({
             id: formData.id,
             username: formData.name,

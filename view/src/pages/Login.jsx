@@ -57,7 +57,7 @@ const handleApiError = (error) => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setCurrentUser, setIsAnAdmin } = useContext(CurrentUserContext);
+  const { updateUserSession } = useContext(CurrentUserContext);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -93,19 +93,8 @@ const Login = () => {
         throw new Error(data.message || "Invalid credentials");
       }
 
-      if (rememberMe) {
-        localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("user", JSON.stringify(data.user));
-      } else {
-        sessionStorage.setItem("token", data.accessToken);
-        sessionStorage.setItem("user", JSON.stringify(data.user));
-      }
-
-      setCurrentUser(data.user);
-      if (data.isAdmin) {
-        setIsAnAdmin(true);
-        localStorage.setItem("isAdmin", "true");
-      }
+      // Update user session using context function
+      updateUserSession(data.user, data.accessToken, data.isAdmin, rememberMe);
 
       showSuccessToast("Login successful!");
 

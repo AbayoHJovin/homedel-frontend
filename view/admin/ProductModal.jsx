@@ -42,8 +42,8 @@ export default function ProductModal({
         images: product.images
           ? product.images.map((img) => ({
               file: null,
-              preview: img.imageUrl,
-              isMain: img.isMain,
+          preview: img.imageUrl,
+          isMain: img.isMain,
             }))
           : [],
       });
@@ -216,7 +216,7 @@ export default function ProductModal({
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none ${
                 errors.prodName ? "border-red-400" : "border-gray-200"
               }`}
-              value={formData.prodName}
+          value={formData.prodName}
               onChange={(e) =>
                 setFormData({ ...formData, prodName: e.target.value })
               }
@@ -234,12 +234,12 @@ export default function ProductModal({
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none resize-none ${
                 errors.prodDescription ? "border-red-400" : "border-gray-200"
               }`}
-              value={formData.prodDescription}
-              onChange={(e) =>
-                setFormData({ ...formData, prodDescription: e.target.value })
-              }
-              rows={3}
-            />
+          value={formData.prodDescription}
+          onChange={(e) =>
+            setFormData({ ...formData, prodDescription: e.target.value })
+          }
+          rows={3}
+        />
             {errors.prodDescription && (
               <p className="text-xs text-red-500 mt-1">
                 {errors.prodDescription}
@@ -252,11 +252,11 @@ export default function ProductModal({
                 Price
               </label>
               <input
-                type="number"
+          type="number"
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none ${
                   errors.price ? "border-red-400" : "border-gray-200"
                 }`}
-                value={formData.price}
+          value={formData.price}
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
@@ -316,8 +316,8 @@ export default function ProductModal({
                   overflow: "auto",
                 }}
                 role="listbox"
-              >
-                {genders.map((gender) => (
+        >
+          {genders.map((gender) => (
                   <div
                     key={gender}
                     className={`px-4 py-2 cursor-pointer hover:bg-green-100 ${
@@ -332,7 +332,7 @@ export default function ProductModal({
                     role="option"
                     aria-selected={formData.gender === gender}
                   >
-                    {gender}
+              {gender}
                   </div>
                 ))}
               </div>
@@ -369,8 +369,8 @@ export default function ProductModal({
                   overflow: "auto",
                 }}
                 role="listbox"
-              >
-                {categories.map((category) => (
+        >
+          {categories.map((category) => (
                   <div
                     key={category}
                     className={`px-4 py-2 cursor-pointer hover:bg-green-100 ${
@@ -385,7 +385,7 @@ export default function ProductModal({
                     role="option"
                     aria-selected={formData.category === category}
                   >
-                    {category}
+              {category}
                   </div>
                 ))}
               </div>
@@ -423,12 +423,12 @@ export default function ProductModal({
                 }`}
                 tabIndex={0}
               >
-                <input
-                  type="file"
-                  multiple
+            <input
+              type="file"
+              multiple
                   accept="image/*"
                   className="hidden"
-                  onChange={handleImageChange}
+              onChange={handleImageChange}
                   disabled={isMaxImagesReached}
                 />
                 Choose Files
@@ -440,16 +440,16 @@ export default function ProductModal({
                 <p className="text-xs text-red-500 mt-1">{errors.images}</p>
               )}
             </div>
-            {formData.images.length > 0 && (
+          {formData.images.length > 0 && (
               <div className="flex flex-wrap gap-4 mt-4">
                 {formData.images.map((img, index) => (
                   <div
                     key={index}
                     className="relative group w-20 h-24 flex flex-col items-center"
                   >
-                    <img
-                      src={img.preview}
-                      alt={`Preview ${index}`}
+                      <img
+                        src={img.preview}
+                        alt={`Preview ${index}`}
                       className={`w-20 h-20 object-cover rounded-lg border-2 ${
                         img.isMain ? "border-green-600" : "border-gray-200"
                       } shadow transition-all duration-200`}
@@ -485,10 +485,10 @@ export default function ProductModal({
                     >
                       {img.isMain ? "Main" : "Set Main"}
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+          )}
           </div>
         </div>
         <div className="mt-6 flex gap-3 justify-end">
@@ -497,14 +497,14 @@ export default function ProductModal({
             onClick={onClose}
             className="px-5 py-2 rounded-md border border-green-600 text-green-700 font-semibold bg-white hover:bg-green-50 transition-colors duration-150"
           >
-            Cancel
+          Cancel
           </button>
           <button
             type="submit"
             className="px-5 py-2 rounded-md bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition-colors duration-150 disabled:opacity-60"
             disabled={formData.images.length === 0}
-          >
-            Save
+        >
+          Save
           </button>
         </div>
       </form>

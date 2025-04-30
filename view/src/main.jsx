@@ -30,6 +30,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PaymentPage from "./pages/Pay.jsx";
 import UpdatePassword from "./pages/UpdatePassword.jsx";
 import SecurityAlert from "./pages/SecurityAlert.jsx";
+import Orders from "./pages/Orders";
+import ErrorBoundary from "./components/ErrorBoundary";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 const queryClient = new QueryClient();
 
@@ -142,8 +144,8 @@ const router = createBrowserRouter([
       </CartItems>
     ),
   },
-  {path:"/paymentPage",element:<PaymentPage/>},
-  { path: "offerComfirmation", element: <OfferComfirmation /> },
+  { path: "/paymentPage", element: <PaymentPage /> },
+  { path: "/order-success", element: <OfferComfirmation /> },
   {
     path: "/try/admin/auth",
     element: (
@@ -160,6 +162,15 @@ const router = createBrowserRouter([
   {
     path: "/cancel-reset",
     element: <SecurityAlert />,
+  },
+  {
+    path: "/account/orders",
+    element: (
+      <CartItems>
+        <Orders />
+      </CartItems>
+    ),
+    errorElement: <ErrorBoundary />,
   },
   { path: "*", element: <NotFound /> },
 ]);

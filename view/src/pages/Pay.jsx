@@ -6,17 +6,18 @@ import MtnMoMoButton from "../components/MtnMomoBtn";
 import { useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Building2, 
-  CreditCard, 
-  Wallet, 
-  ChevronLeft, 
+import {
+  Building2,
+  CreditCard,
+  Wallet,
+  ChevronLeft,
   CheckCircle2,
   Smartphone,
   Globe,
   Copy,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
+import { apiUrl } from "../lib/apis";
 
 const PaymentPage = () => {
   const [clientId, setClientId] = useState(null);
@@ -25,25 +26,26 @@ const PaymentPage = () => {
   const [showBankDetails, setShowBankDetails] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { amount, dataToSend } = location.state || {};
+  const { amount, dataToSend, orderId, phoneNumber } = location.state || {};
   const [paypalError, setPaypalError] = useState(null);
   const [isPaypalLoading, setIsPaypalLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const bankDetails = {
     bankName: "Bank of Kigali",
     accountName: "HomeDel Rwanda Ltd",
     accountNumber: "00012345678",
     swiftCode: "BKIGRWRW",
-    branch: "Kigali Main Branch"
+    branch: "Kigali Main Branch",
   };
 
   useEffect(() => {
-    if (!amount || !dataToSend) {
+    if (!amount || !dataToSend || !orderId || !phoneNumber) {
       navigate(-1);
     } else {
       setCost(amount);
     }
-  }, [amount, dataToSend, navigate]);
+  }, [amount, dataToSend, orderId, phoneNumber, navigate]);
 
   useEffect(() => {
     const fetchClientId = async () => {
@@ -57,7 +59,9 @@ const PaymentPage = () => {
         setPaypalError(null);
       } catch (error) {
         console.error("Error fetching PayPal client ID:", error);
-        setPaypalError("Failed to load PayPal configuration. Please try again later.");
+        setPaypalError(
+          "Failed to load PayPal configuration. Please try again later."
+        );
         message.error({
           content: "Failed to load PayPal configuration",
           className: "custom-message error",
@@ -139,6 +143,58 @@ const PaymentPage = () => {
 
   const formattedAmount = new Intl.NumberFormat("en-US").format(amount);
 
+  const handleMTNPayment = async () => {
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${apiUrl}/request-to-pay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount,
+          phoneNumber,
+          orderId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Payment request failed");
+      }
+
+      if (data.success) {
+        // Show success message
+        message.success({
+          content: "Payment request sent successfully!",
+          className: "custom-message success",
+        });
+
+        // Redirect to success page or show transaction details
+        setTimeout(() => {
+          navigate("/order-success", {
+            state: {
+              orderId,
+              transactionUrl: data.data,
+              paymentType: "MTN",
+            },
+          });
+        }, 2000);
+      } else {
+        throw new Error(data.error || "Payment request failed");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      message.error({
+        content: error.message || "Failed to process payment",
+        className: "custom-message error",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (!clientId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -154,14 +210,14 @@ const PaymentPage = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-4xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
@@ -173,7 +229,8 @@ const PaymentPage = () => {
                 Complete Your Payment
               </h2>
               <p className="mt-4 text-xl text-green-100">
-                Amount to pay: <span className="font-bold">RWF {formattedAmount}</span>
+                Amount to pay:{" "}
+                <span className="font-bold">RWF {formattedAmount}</span>
               </p>
             </div>
           </div>
@@ -182,7 +239,7 @@ const PaymentPage = () => {
           <div className="px-6 py-8 sm:p-10">
             <div className="space-y-6">
               {/* Bank Transfer Section */}
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
@@ -191,8 +248,12 @@ const PaymentPage = () => {
                     <Building2 className="h-8 w-8 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Bank Transfer</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400">Pay directly to our bank account</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Bank Transfer
+                    </h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">
+                      Pay directly to our bank account
+                    </p>
                   </div>
                   <button
                     onClick={() => setShowBankDetails(!showBankDetails)}
@@ -212,12 +273,17 @@ const PaymentPage = () => {
                     >
                       <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 space-y-4">
                         {Object.entries(bankDetails).map(([key, value]) => (
-                          <div key={key} className="flex justify-between items-center">
+                          <div
+                            key={key}
+                            className="flex justify-between items-center"
+                          >
                             <span className="text-gray-600 dark:text-gray-400 capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                              {key.replace(/([A-Z])/g, " $1").trim()}:
                             </span>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900 dark:text-white">{value}</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {value}
+                              </span>
                               <button
                                 onClick={() => copyToClipboard(value)}
                                 className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
@@ -233,27 +299,43 @@ const PaymentPage = () => {
                 </AnimatePresence>
               </motion.div>
 
-              {/* MTN MoMo Section */}
-              <motion.div 
+              {/* MTN Mobile Money Section */}
+              <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 mb-6">
                   <div className="flex-shrink-0">
-                    <Smartphone className="h-8 w-8 text-yellow-500" />
+                    <Smartphone className="h-8 w-8 text-yellow-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">MTN Mobile Money</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400">Pay easily with MTN MoMo</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      MTN Mobile Money
+                    </h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">
+                      Pay using your MTN Mobile Money account
+                    </p>
                   </div>
                 </div>
-                <div className="mt-6">
-                  <MtnMoMoButton amount={amount} data={dataToSend} />
-                </div>
+
+                <button
+                  onClick={handleMTNPayment}
+                  disabled={isProcessing}
+                  className="w-full py-3 px-4 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Pay RWF ${formattedAmount} with MTN`
+                  )}
+                </button>
               </motion.div>
 
               {/* PayPal Section */}
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
@@ -262,8 +344,12 @@ const PaymentPage = () => {
                     <Globe className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">PayPal</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400">Pay securely with PayPal</p>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      PayPal
+                    </h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">
+                      Pay securely with PayPal
+                    </p>
                   </div>
                 </div>
                 {isPaypalLoading ? (
@@ -272,7 +358,9 @@ const PaymentPage = () => {
                   </div>
                 ) : paypalError ? (
                   <div className="text-center py-6">
-                    <p className="text-red-500 dark:text-red-400">{paypalError}</p>
+                    <p className="text-red-500 dark:text-red-400">
+                      {paypalError}
+                    </p>
                     <button
                       onClick={() => {
                         setPaypalError(null);
@@ -285,12 +373,12 @@ const PaymentPage = () => {
                     </button>
                   </div>
                 ) : clientId ? (
-                  <PayPalScriptProvider 
-                    options={{ 
+                  <PayPalScriptProvider
+                    options={{
                       clientId: clientId,
                       currency: "USD",
                       intent: "capture",
-                      components: "buttons"
+                      components: "buttons",
                     }}
                   >
                     <PayPalButtons
@@ -298,13 +386,15 @@ const PaymentPage = () => {
                         layout: "horizontal",
                         color: "blue",
                         shape: "rect",
-                        label: "pay"
+                        label: "pay",
                       }}
                       createOrder={createOrder}
                       onApprove={onApprove}
                       onError={(err) => {
                         console.error("PayPal error:", err);
-                        setPaypalError("An error occurred with PayPal. Please try again.");
+                        setPaypalError(
+                          "An error occurred with PayPal. Please try again."
+                        );
                         onError(err);
                       }}
                       className="w-full"
@@ -317,7 +407,7 @@ const PaymentPage = () => {
         </motion.div>
 
         {/* Back Button */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}

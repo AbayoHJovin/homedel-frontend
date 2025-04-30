@@ -10,6 +10,7 @@ const Sidebar = ({
   isLoggingOut,
   activeTab,
   onTabChange,
+  children,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentLabel, setCurrentLabel] = useState(null);
@@ -27,7 +28,7 @@ const Sidebar = ({
         setIsMobileMenuOpen(false);
       }
     };
-    
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -80,9 +81,13 @@ const Sidebar = ({
         <div
           className={`
             fixed lg:static inset-0 z-40
-            ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            ${
+              isMobileMenuOpen
+                ? "translate-x-0"
+                : "-translate-x-full lg:translate-x-0"
+            }
             transition-all duration-300 ease-in-out
-            ${isCollapsed ? 'w-20' : 'w-72'}
+            ${isCollapsed ? "w-20" : "w-72"}
             bg-white dark:bg-gray-800 shadow-xl
           `}
         >
@@ -118,15 +123,18 @@ const Sidebar = ({
                     className={`
                       w-full flex items-center px-4 py-3 rounded-lg
                       transition-colors duration-200
-                      ${activeTab === label.value
-                        ? 'bg-green-600 text-white'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ${
+                        activeTab === label.value
+                          ? "bg-green-600 text-white"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }
                     `}
                   >
                     <span className="flex-shrink-0">{label.icon}</span>
                     {!isCollapsed && (
-                      <span className="ml-3 text-sm font-medium">{label.text}</span>
+                      <span className="ml-3 text-sm font-medium">
+                        {label.text}
+                      </span>
                     )}
                   </button>
                 ))}
@@ -150,7 +158,9 @@ const Sidebar = ({
               >
                 <ArrowUpRight className="flex-shrink-0" />
                 {!isCollapsed && (
-                  <span className="ml-3 text-sm font-medium">Back to Store</span>
+                  <span className="ml-3 text-sm font-medium">
+                    Back to Store
+                  </span>
                 )}
               </button>
             </div>
@@ -167,9 +177,7 @@ const Sidebar = ({
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-          <div className="container mx-auto p-6">
-            {currentLabel?.page}
-          </div>
+          <div className="container mx-auto p-6">{children}</div>
         </div>
       </div>
 
