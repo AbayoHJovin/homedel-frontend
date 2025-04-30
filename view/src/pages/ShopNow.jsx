@@ -1,12 +1,10 @@
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { useState, useEffect } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Suspense, lazy } from "react";
 import CartItems from "../../constants/cartItems";
-import FavItems from "../../constants/favItems";
 import { Loader2 as Loader3 } from "lucide-react";
 // import Loader3 from "../components/Loading3";
 
@@ -24,37 +22,25 @@ const ShirtsLazy = lazy(() => import("../components/BothGender/Shirts"));
 const ShoesLazy = lazy(() => import("../components/BothGender/Shoes"));
 
 const ShopNow = () => {
-  const navigate = useNavigate();
   const { gender, product } = useParams();
   const [isOpen, setIsOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [selectedGender, setSelectedGender] = useState(gender || "Male");
   const [selectType, setSelectType] = useState(product || "pants");
-  const [showFav, setShowFav] = useState(false);
 
-  useEffect(() => {
-    if (showFav) {
-      navigate("/shop/favourites");
-    } else {
-      navigate(`/shop/${selectedGender}/${selectType}`);
-    }
-  }, [selectedGender, selectType, navigate, showFav]);
 
   const handleGenderSelect = (gender) => {
     setSelectedGender(gender);
     setIsOpen(false);
-    setShowFav(false);
   };
 
   const handleTypeSelect = (type) => {
     setSelectType(type);
     setTypeOpen(false);
-    setShowFav(false);
   };
 
   return (
     <CartItems>
-      <FavItems>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <Navbar />
           
@@ -229,7 +215,6 @@ const ShopNow = () => {
             </AnimatePresence>
           </div>
         </div>
-      </FavItems>
     </CartItems>
   );
 };

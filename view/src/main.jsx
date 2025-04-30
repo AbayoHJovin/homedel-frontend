@@ -25,13 +25,13 @@ import OfferComfirmation from "./pages/OfferComfirmation.jsx";
 import AdminAuth from "./pages/AdminAuth.jsx";
 import AuthorizedAdmin from "../constants/AuthorizedAdmin.jsx";
 import CategorySection from "./components/WhatWeSell.jsx";
-import FavItems from "../constants/favItems.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PaymentPage from "./pages/Pay.jsx";
 import UpdatePassword from "./pages/UpdatePassword.jsx";
 import SecurityAlert from "./pages/SecurityAlert.jsx";
 import Orders from "./pages/Orders";
 import ErrorBoundary from "./components/ErrorBoundary";
+import PersonalDetails from "./components/PersonalDetails.jsx";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 const queryClient = new QueryClient();
 
@@ -78,7 +78,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/shop/favourites",
+    path: "/shop",
     element: (
       <CartItems>
         <ShopNow />
@@ -105,9 +105,7 @@ const router = createBrowserRouter([
     path: "/account/:option",
     element: (
       <CartItems>
-        <FavItems>
           <NewAccount />
-        </FavItems>
       </CartItems>
     ),
   },
@@ -154,7 +152,7 @@ const router = createBrowserRouter([
       </AuthorizedAdmin>
     ),
   },
-  { path: "/try", element: <CategorySection /> },
+  { path: "/try", element: <PersonalDetails /> },
   {
     path: "/update-password",
     element: <UpdatePassword />,

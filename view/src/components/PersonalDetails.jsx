@@ -11,8 +11,8 @@ import { message } from "antd";
 import { FaUserAlt } from "react-icons/fa";
 
 const PersonalDetails = () => {
-  const { theme, toggleTheme } = useContext(ThemeContext);
-  const { currentUser, isAnAdmin } = useContext(CurrentUserContext);
+  const { theme } = useContext(ThemeContext);
+  const { currentUser } = useContext(CurrentUserContext);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,10 +41,6 @@ const PersonalDetails = () => {
     }));
   };
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-  };
-
   const handleProfilePictureChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -53,8 +49,8 @@ const PersonalDetails = () => {
         const imageDataUrl = e.target.result;
         setFormData((prevData) => ({
           ...prevData,
-          profilePicture: file, // Store file for backend
-          previewImage: imageDataUrl, // Preview in the UI
+          profilePicture: file,
+          previewImage: imageDataUrl,
         }));
       };
       reader.readAsDataURL(file);
@@ -68,7 +64,7 @@ const PersonalDetails = () => {
       formDatas.append("username", formData.name);
       formDatas.append("email", formData.email);
       if (formData.profilePicture instanceof File) {
-        formDatas.append("image", formData.profilePicture); // Send file to backend
+        formDatas.append("image", formData.profilePicture);
       }
       setIsSaving(true);
       const response = await axios.patch(
@@ -80,7 +76,6 @@ const PersonalDetails = () => {
       );
 
       if (response.status === 200) {
-        const data = response.data;
         setIsEditing(false);
         sessionStorage.setItem(
           "user",
@@ -92,12 +87,12 @@ const PersonalDetails = () => {
           })
         );
         message.success("User updated successfully!");
-        setIsSaving(false);
-      } else {
-        console.error("Failed to update user:", response.data);
       }
     } catch (error) {
       console.error("Error updating user:", error);
+      message.error("Failed to update user. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -106,36 +101,32 @@ const PersonalDetails = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
           <div className="text-center space-y-6">
-            {/* Icon */}
             <div className="inline-block p-4 bg-green-100 dark:bg-green-900/50 rounded-full">
               <FaUserAlt className="w-10 h-10 text-green-600 dark:text-green-400" />
             </div>
-            
-            {/* Text Content */}
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Access Restricted
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
-                Please sign in or create an account to view and manage your profile.
+                Please sign in or create an account to view and manage your
+                profile.
               </p>
             </div>
-
-            {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              <a 
+              <a
                 href="/login"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-white bg-green-600 hover:bg-green-700 transition-all duration-200 font-medium"
               >
                 Sign In
               </a>
-              <a 
+              <a
                 href="/signup"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 transition-all duration-200 font-medium"
               >
                 Create Account
               </a>
-              <a 
+              <a
                 href="/"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 font-medium"
               >
@@ -153,7 +144,7 @@ const PersonalDetails = () => {
       <div className="sticky top-0 z-30">
         <UserNav currentBar="Personal Details" />
       </div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Profile Section */}
@@ -161,15 +152,22 @@ const PersonalDetails = () => {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Profile Information
             </h2>
-            
+
             <div className="flex flex-col md:flex-row gap-8">
               {/* Profile Picture */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group">
                   <img
-                    src={formData.previewImage || formData.profilePicture}
+                    src={
+                      formData.previewImage ||
+                      formData.profilePicture ||
+                      "/default-avatar.png"
+                    }
                     alt="Profile"
                     className="w-32 h-32 rounded-full object-cover ring-4 ring-green-50 dark:ring-green-900"
+                    onError={(e) => {
+                      e.target.src = "/default-avatar.png";
+                    }}
                   />
                   {isEditing && (
                     <label
@@ -248,7 +246,8 @@ const PersonalDetails = () => {
                       </button>
                       <button
                         onClick={handleSave}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                        disabled={isSaving}
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSaving ? "Saving..." : "Save Changes"}
                       </button>
@@ -274,7 +273,8 @@ const PersonalDetails = () => {
                 Newsletter Subscription
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Stay updated with our latest products and offers by subscribing to our newsletter.
+                Stay updated with our latest products and offers by subscribing
+                to our newsletter.
               </p>
               <button className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
                 Subscribe Now
@@ -291,7 +291,7 @@ const PersonalDetails = () => {
                   Manage your account security and password settings.
                 </p>
                 <button
-                  onClick={() => window.location.href = "/account/password"}
+                  onClick={() => (window.location.href = "/account/password")}
                   className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                 >
                   Change Password
@@ -304,7 +304,8 @@ const PersonalDetails = () => {
                   Danger Zone
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Once you delete your account, there is no going back. Please be certain.
+                  Once you delete your account, there is no going back. Please
+                  be certain.
                 </p>
                 <button className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
                   Delete Account

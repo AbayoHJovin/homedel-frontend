@@ -13,7 +13,6 @@ const Sidebar = ({
   children,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [currentLabel, setCurrentLabel] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,11 +33,6 @@ const Sidebar = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Update current label
-  useEffect(() => {
-    setCurrentLabel(labels.find((item) => item.value === activeTab) || null);
-  }, [labels, activeTab]);
-
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const openModal = () => setIsModalOpen(true);
@@ -53,6 +47,10 @@ const Sidebar = ({
       </div>
     );
   }
+
+  // Find the current active page content
+  const activeLabel = labels.find((label) => label.value === activeTab);
+  const pageContent = activeLabel?.page || children;
 
   return (
     <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -76,11 +74,12 @@ const Sidebar = ({
         </button>
       </div>
 
-      {/* Sidebar */}
-      <div className={`flex h-[calc(100vh-56px)] lg:h-screen`}>
+      {/* Main Layout */}
+      <div className="flex min-h-screen lg:min-h-[calc(100vh-56px)]">
+        {/* Sidebar */}
         <div
           className={`
-            fixed lg:static inset-0 z-40
+            fixed lg:static inset-y-0 left-0 z-40
             ${
               isMobileMenuOpen
                 ? "translate-x-0"
@@ -176,8 +175,10 @@ const Sidebar = ({
         )}
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-          <div className="container mx-auto p-6">{children}</div>
+        <div className="flex-1 lg:pl-0 pl-0">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="container mx-auto p-6">{pageContent}</div>
+          </div>
         </div>
       </div>
 

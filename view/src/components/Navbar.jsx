@@ -257,7 +257,6 @@ export default function Navbar() {
         handleAddToCart={addItemOncart}
         handleDeleteItem={deleteItem}
         localCart={itemsOnCart}
-        localFav={[]}
         theme={theme}
       />
     </CartItems>

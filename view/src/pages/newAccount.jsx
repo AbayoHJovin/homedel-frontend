@@ -13,7 +13,6 @@ import { Heart, List, Lock, LogOut, User2, UserX, ArrowRight, ShoppingBag } from
 import Offers from "../../constants/Offers";
 import Password from "../components/Password";
 import { useNavigate, useParams } from "react-router-dom";
-import FavProducts from "../components/Favourites";
 import { motion } from "framer-motion";
 
 const NewAccount = () => {
@@ -71,9 +70,6 @@ const NewAccount = () => {
         setIsLoggingOut(false);
       });
   };
-  useEffect(()=>{
-    console.log("Current user is ",currentUser)
-  },[currentUser])
   const labels = [
     {
       icon: <User2 />,
@@ -100,12 +96,7 @@ const NewAccount = () => {
       value: "password",
       page: <Password />,
     },
-    {
-      icon:<Heart/>,
-      text:"Wishlist",
-      value:"wishlist",
-      page:<FavProducts/>
-    }
+
   ];
 
   const containerVariants = {
@@ -183,21 +174,6 @@ const NewAccount = () => {
                     <p className={`${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}>Monitor your orders and get real-time updates</p>
-                  </motion.div>
-
-                  <motion.div 
-                    variants={itemVariants}
-                    className={`p-6 rounded-xl ${
-                      theme === 'dark' ? 'bg-gray-700' : 'bg-green-50'
-                    }`}
-                  >
-                    <Heart className="w-8 h-8 text-green-600 mb-4" />
-                    <h3 className={`text-lg font-semibold mb-2 ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>Save Favorites</h3>
-                    <p className={`${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Create your wishlist and save items for later</p>
                   </motion.div>
                 </div>
 

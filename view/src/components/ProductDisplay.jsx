@@ -11,7 +11,6 @@ const ProductDisplay = memo(({
   handleAddToCart, 
   handleDeleteItem, 
   localCart = [], 
-  localFav = [],
   theme 
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,7 +50,6 @@ const ProductDisplay = memo(({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
             {currentProducts.map((product) => {
               const isOnCart = localCart.includes(product.prodId);
-              const isOnFav = localFav.includes(product.prodId);
               const mainImage = product.images?.find(img => img.isMain)?.imageUrl || 
                               product.images?.[0]?.imageUrl || 
                               product.image || 
@@ -73,7 +71,6 @@ const ProductDisplay = memo(({
                     handleAddToCart={(event) => handleAddToCart(product.prodId, event)}
                     deleteItem={(event) => handleDeleteItem(product.prodId, event)}
                     isOnCart={isOnCart}
-                    isOnFav={isOnFav}
                   />
                 </motion.div>
               );

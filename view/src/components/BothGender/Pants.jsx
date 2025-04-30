@@ -1,19 +1,16 @@
 import { useContext, useEffect, useState, useCallback } from "react";
 import useProducts from "../../../constants/products";
 import { CartContext } from "../../../constants/cartItems";
-import { FavContext } from "../../../constants/favItems";
 import { ThemeContext } from "../../../constants/ThemeContext";
 import ProductDisplay from "../ProductDisplay";
 
 const Pants = () => {
   const { loading, products } = useProducts();
   const { itemsOnCart, addItemOncart, deleteItem } = useContext(CartContext);
-  const { itemsOnFav } = useContext(FavContext);
   const { theme } = useContext(ThemeContext);
   
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [localCart, setLocalCart] = useState([]);
-  const [localFav, setLocalFav] = useState([]);
 
   // Memoize filter function
   const filterProducts = useCallback(() => {
@@ -28,8 +25,7 @@ const Pants = () => {
 
   useEffect(() => {
     setLocalCart(itemsOnCart?.map(item => item.productId) || []);
-    setLocalFav(itemsOnFav?.map(item => item.productId) || []);
-  }, [itemsOnCart, itemsOnFav]);
+  }, [itemsOnCart]);
 
   const handleAddToCart = useCallback((productId, event) => {
     event.stopPropagation();
@@ -48,7 +44,6 @@ const Pants = () => {
       handleAddToCart={handleAddToCart}
       handleDeleteItem={handleDeleteItem}
       localCart={localCart}
-      localFav={localFav}
       theme={theme}
     />
   );

@@ -4,8 +4,8 @@ import { CurrentUserContext } from "../../constants/currentUser";
 import { apiUrl } from "../lib/apis";
 import OrderDetails from "../components/OrderDetails";
 import Sidebar from "./Sidebar";
+import PersonalDetails from "../components/PersonalDetails";
 import {
-  Filter,
   Calendar,
   ChevronDown,
   Package,
@@ -14,7 +14,6 @@ import {
   Loader,
   User2,
   Lock,
-  Heart,
 } from "lucide-react";
 
 const Orders = () => {
@@ -105,7 +104,7 @@ const Orders = () => {
       icon: <User2 />,
       text: "Account",
       value: "account",
-      page: null,
+      page: <PersonalDetails />,
     },
     {
       icon: <Package />,
@@ -117,12 +116,6 @@ const Orders = () => {
       icon: <Lock />,
       text: "Password",
       value: "password",
-      page: null,
-    },
-    {
-      icon: <Heart />,
-      text: "Wishlist",
-      value: "wishlist",
       page: null,
     },
   ];
