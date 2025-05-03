@@ -170,23 +170,23 @@ export default function ProductTable() {
         </h1>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6 w-full">
           <div className="flex flex-row w-full sm:w-[60%] max-w-xl gap-2 bg-white rounded-lg shadow p-2">
-            <input
-              type="text"
-              placeholder="Search a product"
-              value={searchTerm}
-              onChange={handleSearch}
+        <input
+          type="text"
+          placeholder="Search a product"
+          value={searchTerm}
+          onChange={handleSearch}
               className="flex-1 px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm bg-gray-50"
-            />
-            <button
-              style={{ backgroundColor: "#0e8c2b" }}
-              onClick={() => {
-                setSelectedProduct(null); // Reset for new product
-                setShowModal(true);
-              }}
+        />
+        <button
+          style={{ backgroundColor: "#0e8c2b" }}
+          onClick={() => {
+            setSelectedProduct(null); // Reset for new product
+            setShowModal(true);
+          }}
               className="ml-2 px-4 py-2 rounded-md font-semibold text-white bg-green-700 hover:bg-green-800 shadow-sm text-sm whitespace-nowrap"
-            >
-              Add Product
-            </button>
+        >
+          Add Product
+        </button>
           </div>
         </div>
         {/* Filters Bar */}

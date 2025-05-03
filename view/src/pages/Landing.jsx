@@ -1,5 +1,6 @@
 import Footer from "../components/Footer";
 import Hero from "../components/Hero";
+// import HeroTest from "../components/HeroTest";
 import Locations from "../components/Locations";
 import Navbar from "../components/Navbar";
 import Popular from "../components/Popular";

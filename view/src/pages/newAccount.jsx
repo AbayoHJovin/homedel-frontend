@@ -9,11 +9,22 @@ import LogoutModal from "./logout";
 import Loader from "../components/loader";
 import { toast } from "react-toastify";
 import { apiUrl } from "../lib/apis";
-import { Heart, List, Lock, LogOut, User2, UserX, ArrowRight, ShoppingBag } from "lucide-react";
+import {
+  Heart,
+  List,
+  Lock,
+  LogOut,
+  User2,
+  UserX,
+  ArrowRight,
+  ShoppingBag,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import Offers from "../../constants/Offers";
-import Password from "../components/Password";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import Settings from "../components/Settings";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const NewAccount = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -23,6 +34,8 @@ const NewAccount = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { option } = useParams();
   const [bar, setBar] = useState(option || "personal");
+  const { t } = useLanguageContext();
+
   useEffect(() => {
     setBar(option || "personal");
   }, [option]);
@@ -64,7 +77,7 @@ const NewAccount = () => {
         }
       })
       .catch(() => {
-        toast.error("Can't logout!");
+        toast.error(t("account.logoutError"));
       })
       .finally(() => {
         setIsLoggingOut(false);
@@ -73,13 +86,13 @@ const NewAccount = () => {
   const labels = [
     {
       icon: <User2 />,
-      text: "Account",
+      text: t("account.tabs.account"),
       value: "account",
       page: <PersonalDetails />,
     },
     {
       icon: <List />,
-      text: "Orders",
+      text: t("account.tabs.orders"),
       value: "orders",
       page: (
         <Offers>
@@ -91,12 +104,11 @@ const NewAccount = () => {
       ),
     },
     {
-      icon: <Lock />,
-      text: "Password",
-      value: "password",
-      page: <Password />,
+      icon: <SettingsIcon />,
+      text: t("account.tabs.settings"),
+      value: "settings",
+      page: <Settings />,
     },
-
   ];
 
   const containerVariants = {
@@ -106,18 +118,22 @@ const NewAccount = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div
+      className={`min-h-screen ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
       {isSignedIn ? (
         <Sidebar
           labels={labels}
@@ -126,22 +142,22 @@ const NewAccount = () => {
           activeTab={bar}
           onTabChange={(newTab) => {
             setBar(newTab);
-            window.location.href=`/account/${newTab}`;
+            window.location.href = `/account/${newTab}`;
           }}
         />
       ) : (
         <div className="flex justify-center items-center min-h-screen p-4 sm:p-6 lg:p-8">
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="w-full max-w-2xl"
           >
             {/* Main Card */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className={`rounded-2xl shadow-xl overflow-hidden ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                theme === "dark" ? "bg-gray-800" : "bg-white"
               }`}
             >
               {/* Header */}
@@ -150,10 +166,10 @@ const NewAccount = () => {
                   <UserX className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  Not Signed In
+                  {t("account.notSignedIn.title")}
                 </h2>
                 <p className="text-green-100 text-lg">
-                  Access your account to unlock all features
+                  {t("account.notSignedIn.subtitle")}
                 </p>
               </div>
 
@@ -161,47 +177,55 @@ const NewAccount = () => {
               <div className="px-6 py-8 sm:p-10">
                 {/* Features Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                  <motion.div 
+                  <motion.div
                     variants={itemVariants}
                     className={`p-6 rounded-xl ${
-                      theme === 'dark' ? 'bg-gray-700' : 'bg-green-50'
+                      theme === "dark" ? "bg-gray-700" : "bg-green-50"
                     }`}
                   >
                     <ShoppingBag className="w-8 h-8 text-green-600 mb-4" />
-                    <h3 className={`text-lg font-semibold mb-2 ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>Track Orders</h3>
-                    <p className={`${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Monitor your orders and get real-time updates</p>
+                    <h3
+                      className={`text-lg font-semibold mb-2 ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {t("account.features.trackOrders.title")}
+                    </h3>
+                    <p
+                      className={`${
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {t("account.features.trackOrders.description")}
+                    </p>
                   </motion.div>
                 </div>
 
                 {/* Action Buttons */}
-                <motion.div 
+                <motion.div
                   variants={itemVariants}
                   className="flex flex-col sm:flex-row gap-4 mt-8"
                 >
-                  <motion.a 
+                  <motion.a
                     href="/signup"
                     className="flex-1"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <button className="w-full px-6 py-3 text-lg font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-all duration-300 flex items-center justify-center">
-                      Create Account
+                      {t("account.buttons.createAccount")}
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </button>
                   </motion.a>
 
-                  <motion.a 
+                  <motion.a
                     href="/login"
                     className="flex-1"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <button className="w-full px-6 py-3 text-lg font-medium border-2 border-green-600 text-green-600 rounded-xl hover:bg-green-50 transition-all duration-300 flex items-center justify-center">
-                      Sign In
+                      {t("account.buttons.signIn")}
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </button>
                   </motion.a>
@@ -210,13 +234,13 @@ const NewAccount = () => {
             </motion.div>
 
             {/* Footer Text */}
-            <motion.p 
+            <motion.p
               variants={itemVariants}
               className={`text-center mt-6 ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              By signing up, you agree to our Terms of Service and Privacy Policy
+              {t("account.termsNotice")}
             </motion.p>
           </motion.div>
         </div>

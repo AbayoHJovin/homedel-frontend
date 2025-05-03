@@ -2,27 +2,26 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import useProducts from "../../constants/products";
-import UserLocation from "./UserLocation";
-import { useNavigate } from "react-router-dom";
+import AdminMapView from "./AdminMapView";
 import {
   Package,
   MapPin,
   Clock,
   CreditCard,
   ChevronDown,
-  DownloadIcon,
   Truck,
   CheckCircle,
   AlertCircle,
-  CreditCard as CreditCardIcon,
+  User,
+  Phone,
 } from "lucide-react";
-import { useLanguageContext } from "../context/LanguageProvider";
+import { apiUrl } from "../lib/apis";
+import { toast } from "react-hot-toast";
 
-const OrderDetails = ({ order }) => {
+const AdminOrderDetails = ({ order, users, onOrderUpdated }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { products } = useProducts();
-  const navigate = useNavigate();
-  const { t } = useLanguageContext();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -32,6 +31,10 @@ const OrderDetails = ({ order }) => {
         return "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30";
       case "DELIVERING":
         return "text-blue-600 bg-blue-100 dark:bg-blue-900/30";
+      case "DELIVERED":
+        return "text-purple-600 bg-purple-100 dark:bg-purple-900/30";
+      case "CANCELLED":
+        return "text-red-600 bg-red-100 dark:bg-red-900/30";
       default:
         return "text-gray-600 bg-gray-100 dark:bg-gray-900/30";
     }
@@ -45,6 +48,10 @@ const OrderDetails = ({ order }) => {
         return <AlertCircle className="w-5 h-5" />;
       case "DELIVERING":
         return <Truck className="w-5 h-5" />;
+      case "DELIVERED":
+        return <CheckCircle className="w-5 h-5" />;
+      case "CANCELLED":
+        return <AlertCircle className="w-5 h-5" />;
       default:
         return <Package className="w-5 h-5" />;
     }
@@ -83,17 +90,8 @@ const OrderDetails = ({ order }) => {
     }, 0);
   };
 
-  const handlePayNow = () => {
-    // Navigate to payment page with necessary order details
-    navigate("/paymentPage", {
-      state: {
-        amount: calculateTotal(),
-        orderId: order.orderId,
-        phoneNumber: order.phoneNo,
-        dataToSend: true,
-      },
-    });
-  };
+  // Get user details
+  const customer = users.find((user) => user.userId === order.ordererId) || {};
 
   // Get product details for each order item
   const orderItemsWithDetails = order.orderItems.map((item) => {
@@ -103,6 +101,56 @@ const OrderDetails = ({ order }) => {
       productDetails: product || null,
     };
   });
+
+  const updateOrderStatus = async (status) => {
+    setIsUpdating(true);
+
+    // Store the original order status in case we need to revert
+    const originalStatus = order.orderStatus;
+
+    try {
+      // Optimistically update the UI first
+      order.orderStatus = status;
+
+      // Call the onOrderUpdated callback if provided to update UI immediately
+      if (onOrderUpdated && typeof onOrderUpdated === "function") {
+        onOrderUpdated(order);
+      }
+
+      // Now make the API call
+      const response = await fetch(`${apiUrl}/updateOrder`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Use cookies for authentication
+        body: JSON.stringify({
+          orderId: order.orderId,
+          status: status, // Match the backend API parameter name
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        // Revert the optimistic update if there was an error
+        order.orderStatus = originalStatus;
+        if (onOrderUpdated) onOrderUpdated(order);
+        throw new Error(data.error || "Failed to update order status");
+      }
+
+      // Show success message
+      toast.success("Order status updated successfully");
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update order status: " + error.message);
+
+      // Revert the optimistic update if there was an error
+      order.orderStatus = originalStatus;
+      if (onOrderUpdated) onOrderUpdated(order);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <motion.div
@@ -141,20 +189,12 @@ const OrderDetails = ({ order }) => {
                 {order.orderItems.length} items
               </p>
             </div>
-            {order.paymentStatus === "PENDING" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePayNow();
-                }}
-                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-              >
-                <div className="flex items-center space-x-1">
-                  <CreditCardIcon className="w-4 h-4" />
-                  <span>{t("orders.orderDetails.payNow")}</span>
-                </div>
-              </button>
-            )}
+            <div className="flex items-center space-x-1">
+              <User className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {customer.username || "Unknown"}
+              </span>
+            </div>
             <motion.button
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.2 }}
@@ -176,45 +216,115 @@ const OrderDetails = ({ order }) => {
             transition={{ duration: 0.2 }}
           >
             <div className="px-6 pb-6 space-y-6">
-              {/* Payment Action Button (for PENDING orders) */}
-              {order.paymentStatus === "PENDING" && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-start space-x-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t("orders.orderDetails.paymentPending")}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {t("orders.orderDetails.completePayment")}
-                        </p>
-                      </div>
+              {/* Customer Information */}
+              <div className="bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Customer Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start space-x-3">
+                    <User className="w-5 h-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Name
+                      </h5>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {customer.username || "N/A"}
+                      </p>
                     </div>
-                    <button
-                      onClick={handlePayNow}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <CreditCardIcon className="w-4 h-4" />
-                        <span>{t("orders.orderDetails.payNow")}</span>
-                      </div>
-                    </button>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <Phone className="w-5 h-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Phone
+                      </h5>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {order.phoneNo || "N/A"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Admin Actions */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Order Management
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => updateOrderStatus("PENDING")}
+                    disabled={isUpdating || order.orderStatus === "PENDING"}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      order.orderStatus === "PENDING"
+                        ? "bg-yellow-200 text-yellow-800 cursor-default"
+                        : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Pending</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => updateOrderStatus("DELIVERING")}
+                    disabled={isUpdating || order.orderStatus === "DELIVERING"}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      order.orderStatus === "DELIVERING"
+                        ? "bg-blue-200 text-blue-800 cursor-default"
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <Truck className="w-4 h-4" />
+                      <span>Delivering</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => updateOrderStatus("DELIVERED")}
+                    disabled={isUpdating || order.orderStatus === "DELIVERED"}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      order.orderStatus === "DELIVERED"
+                        ? "bg-green-200 text-green-800 cursor-default"
+                        : "bg-green-100 text-green-800 hover:bg-green-200"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Delivered</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => updateOrderStatus("CANCELLED")}
+                    disabled={isUpdating || order.orderStatus === "CANCELLED"}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      order.orderStatus === "CANCELLED"
+                        ? "bg-red-200 text-red-800 cursor-default"
+                        : "bg-red-100 text-red-800 hover:bg-red-200"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Cancel</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
 
               {/* Delivery Location Map */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <MapPin className="w-5 h-5 text-gray-400" />
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                    {t("orders.orderDetails.deliveryLocation")}
+                    Delivery Location
                   </h4>
                 </div>
-                <UserLocation
-                  readOnly={true}
-                  initialLocation={{
+                <AdminMapView
+                  customerLocation={{
                     lat: order.latitude,
                     lng: order.longitude,
                     address: order.mapAddress,
@@ -227,7 +337,7 @@ const OrderDetails = ({ order }) => {
                 <div className="flex items-center space-x-2 mb-4">
                   <Clock className="w-5 h-5 text-gray-400" />
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                    {t("orders.orderDetails.orderTimeline")}
+                    Order Timeline
                   </h4>
                 </div>
                 <div className="relative">
@@ -240,7 +350,7 @@ const OrderDetails = ({ order }) => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t("orders.orderDetails.orderPlaced")}
+                          Order Placed
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(order.orderDate)}
@@ -260,8 +370,7 @@ const OrderDetails = ({ order }) => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t("orders.orderDetails.paymentStatus")}{" "}
-                          {order.paymentStatus.toLowerCase()}
+                          Payment Status: {order.paymentStatus.toLowerCase()}
                         </p>
                         {order.transaction && (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -276,6 +385,10 @@ const OrderDetails = ({ order }) => {
                         className={`w-5 h-5 rounded-full ${
                           order.orderStatus === "DELIVERING"
                             ? "bg-blue-500"
+                            : order.orderStatus === "DELIVERED"
+                            ? "bg-green-500"
+                            : order.orderStatus === "CANCELLED"
+                            ? "bg-red-500"
                             : "bg-gray-300 dark:bg-gray-600"
                         } flex items-center justify-center`}
                       >
@@ -284,13 +397,21 @@ const OrderDetails = ({ order }) => {
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {order.orderStatus === "DELIVERING"
-                            ? t("orders.orderDetails.outForDelivery")
-                            : t("orders.orderDetails.pendingDelivery")}
+                            ? "Out for Delivery"
+                            : order.orderStatus === "DELIVERED"
+                            ? "Delivered"
+                            : order.orderStatus === "CANCELLED"
+                            ? "Cancelled"
+                            : "Pending Delivery"}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {order.orderStatus === "DELIVERING"
-                            ? t("orders.orderDetails.onItsWay")
-                            : t("orders.orderDetails.preparingOrder")}
+                            ? "Your order is on its way"
+                            : order.orderStatus === "DELIVERED"
+                            ? "Order has been delivered"
+                            : order.orderStatus === "CANCELLED"
+                            ? "Order has been cancelled"
+                            : "Preparing your order"}
                         </p>
                       </div>
                     </div>
@@ -301,7 +422,7 @@ const OrderDetails = ({ order }) => {
               {/* Order Items */}
               <div className="space-y-4">
                 <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                  {t("orders.orderDetails.orderItems")}
+                  Order Items
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {orderItemsWithDetails.map((item) =>
@@ -326,7 +447,7 @@ const OrderDetails = ({ order }) => {
                             {item.productDetails.prodName}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {t("orders.orderDetails.qty")}: {item.quantity}
+                            Qty: {item.quantity}
                           </p>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
                             RWF{" "}
@@ -346,7 +467,7 @@ const OrderDetails = ({ order }) => {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {t("orders.orderDetails.productUnavailable")}
+                            Product Unavailable
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             ID: {item.productId}
@@ -368,7 +489,7 @@ const OrderDetails = ({ order }) => {
   );
 };
 
-OrderDetails.propTypes = {
+AdminOrderDetails.propTypes = {
   order: PropTypes.shape({
     orderId: PropTypes.string.isRequired,
     orderDate: PropTypes.string.isRequired,
@@ -378,6 +499,7 @@ OrderDetails.propTypes = {
     latitude: PropTypes.number,
     longitude: PropTypes.number,
     phoneNo: PropTypes.string,
+    ordererId: PropTypes.string,
     transaction: PropTypes.shape({
       amount: PropTypes.number,
       paymentMethod: PropTypes.string,
@@ -389,6 +511,8 @@ OrderDetails.propTypes = {
       })
     ).isRequired,
   }).isRequired,
+  users: PropTypes.array.isRequired,
+  onOrderUpdated: PropTypes.func,
 };
 
-export default OrderDetails;
+export default AdminOrderDetails;

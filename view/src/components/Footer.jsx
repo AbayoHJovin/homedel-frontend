@@ -11,6 +11,7 @@ import { CurrentUserContext } from "../../constants/currentUser";
 import { apiUrl } from "../lib/apis";
 import { toast, ToastContainer } from "react-toastify";
 import Loader3 from "./Loading3";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -18,9 +19,11 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [error, seterror] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguageContext();
+
   function handleSubscribe() {
-    if (email == "" || email.trim == "") {
-      seterror("Pleas enter your email");
+    if (email === "" || email.trim === "") {
+      seterror(t("footer.subscribeError"));
       return;
     }
     setLoading(true);
@@ -32,7 +35,7 @@ const Footer = () => {
       .then((resp) => resp.json())
       .then((data) => {
         if (data.message === "Subscription successful!") {
-          toast.success("Subscription added !");
+          toast.success(t("footer.subscribeSuccess"));
         } else {
           seterror(data.message);
         }
@@ -48,14 +51,16 @@ const Footer = () => {
         <div className="container mx-auto relative z-10 flex flex-col md:flex-row justify-between items-center">
           <div className="flex flex-col sssm:flex-row sssm:space-x-20 mb-10 md:mb-0">
             <div className="mb-8 md:mb-0">
-              <h3 className="font-semibold text-white mb-4">SHOP</h3>
+              <h3 className="font-semibold text-white mb-4">
+                {t("footer.shop.title")}
+              </h3>
               <ul className="space-y-2 text-gray-200">
                 <li>
                   <h1
                     onClick={() => navigate("/shop/Unisex/pants")}
                     className="hover:underline cursor-pointer"
                   >
-                    Pants
+                    {t("footer.shop.pants")}
                   </h1>
                 </li>
                 <li>
@@ -63,7 +68,7 @@ const Footer = () => {
                     onClick={() => navigate("/shop/Unisex/pants")}
                     className="hover:underline cursor-pointer"
                   >
-                    Shorts
+                    {t("footer.shop.shorts")}
                   </h1>
                 </li>
                 <li>
@@ -71,7 +76,7 @@ const Footer = () => {
                     onClick={() => navigate("/shop/Unisex/shirts")}
                     className="hover:underline cursor-pointer"
                   >
-                    Shirts
+                    {t("footer.shop.shirts")}
                   </h1>
                 </li>
                 <li>
@@ -79,7 +84,7 @@ const Footer = () => {
                     onClick={() => navigate("/shop/Unisex/shirts")}
                     className="hover:underline cursor-pointer"
                   >
-                    T-shirts
+                    {t("footer.shop.tshirts")}
                   </h1>
                 </li>
                 <li>
@@ -87,47 +92,51 @@ const Footer = () => {
                     onClick={() => navigate("/shop/Unisex/shoes")}
                     className="hover:underline cursor-pointer"
                   >
-                    Shoes
+                    {t("footer.shop.shoes")}
                   </h1>
                 </li>
               </ul>
             </div>
             <div className="mb-8 md:mb-0">
-              <h3 className="font-semibold mb-4 text-white">HELP</h3>
+              <h3 className="font-semibold mb-4 text-white">
+                {t("footer.help.title")}
+              </h3>
               <ul className="space-y-2 text-gray-200">
                 <li>
                   <a href="/contacts" className="hover:underline">
-                    Contact Us
+                    {t("footer.help.contactUs")}
                   </a>
                 </li>
                 <li>
                   <a href="/about" className="hover:underline">
-                    FAQ
+                    {t("footer.help.faq")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:underline">
-                    Accessibility
+                    {t("footer.help.accessibility")}
                   </a>
                 </li>
               </ul>
             </div>
             <div className="mb-8 md:mb-0">
-              <h3 className="font-semibold mb-4 text-white">ABOUT</h3>
+              <h3 className="font-semibold mb-4 text-white">
+                {t("footer.about.title")}
+              </h3>
               <ul className="space-y-2 text-gray-200">
                 <li>
                   <a href="#" className="hover:underline">
-                    Our Story
+                    {t("footer.about.ourStory")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:underline">
-                    Our locations
+                    {t("footer.about.ourLocations")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:underline">
-                    Our team
+                    {t("footer.about.ourTeam")}
                   </a>
                 </li>
               </ul>
@@ -135,14 +144,14 @@ const Footer = () => {
           </div>
           <div className="w-full md:w-auto">
             <h3 className="font-semibold mb-4 text-center md:text-left text-white">
-              Sign up to get 10% off your first order
+              {t("footer.subscribe.title")}
             </h3>
             <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your Email Address"
+                placeholder={t("footer.subscribe.placeholder")}
                 className="px-4 py-2 rounded-full text-black border border-gray-300 focus:outline-none w-full md:w-auto"
               />
 
@@ -153,10 +162,10 @@ const Footer = () => {
                 {loading ? (
                   <div className="flex items-center p-0 justify-center">
                     <Loader3 bg="white" />
-                    <span>wait ...</span>
+                    <span>{t("footer.subscribe.loading")}</span>
                   </div>
                 ) : (
-                  "Subscribe"
+                  t("footer.subscribe.button")
                 )}
               </button>
             </div>
@@ -206,24 +215,24 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-10 text-center text-sm relative z-10 text-white">
-          <p>© 2024 HomeDel, Inc. All Rights Reserved</p>
+          <p>{t("footer.copyright")}</p>
           <div className="flex justify-center space-x-4 mt-2">
             <a href="#" className="hover:underline">
-              Terms of Service
+              {t("footer.legal.terms")}
             </a>
             <a href="#" className="hover:underline">
-              Privacy Policy
+              {t("footer.legal.privacy")}
             </a>
             {isAnAdmin ? (
               <a href="/try/admin/auth" className="hover:underline">
-                admin
+                {t("footer.admin")}
               </a>
             ) : null}
           </div>
         </div>
       </div>
       <div className="bg-gray-200 text-center">
-        <h1>Made by Hirwa Jovin</h1>
+        <h1>{t("footer.credit")}</h1>
       </div>
     </div>
   );

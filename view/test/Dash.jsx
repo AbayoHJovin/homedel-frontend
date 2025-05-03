@@ -221,7 +221,7 @@ export default function Dashboard() {
           <div className="bg-green-50 max-w-xs w-full p-6 rounded-lg shadow-lg flex flex-col items-center hover:scale-105 transition-transform duration-200 cursor-pointer">
             <div className="mb-2 bg-yellow-400 rounded-full p-3">
               <LayoutDashboard className="h-7 w-7 text-white" />
-            </div>
+          </div>
             <h1 className="text-3xl font-bold text-yellow-700">
               {totalPopular}
             </h1>

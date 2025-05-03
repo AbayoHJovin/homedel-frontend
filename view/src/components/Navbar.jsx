@@ -4,10 +4,21 @@ import { Menu, X } from "lucide-react";
 import { Drawer, List, ListItem, Badge } from "@mui/material";
 import CartItems, { CartContext } from "../../constants/cartItems";
 import Search from "./searchComponent";
-import { SearchIcon, ShoppingCart, UserPlus, Home, Info, Store, Phone, User } from "lucide-react";
+import {
+  SearchIcon,
+  ShoppingCart,
+  UserPlus,
+  Home,
+  Info,
+  Store,
+  Phone,
+  User,
+} from "lucide-react";
 import { ThemeContext } from "../../constants/ThemeContext";
 import useProducts from "../../constants/products";
 import { motion } from "framer-motion";
+import { useLanguageContext } from "../context/LanguageProvider";
+import LanguageSelector from "./LanguageSelector";
 
 const MemoizedSearch = memo(Search);
 
@@ -19,6 +30,7 @@ export default function Navbar() {
   const { theme } = useContext(ThemeContext);
   const { products, loading, error } = useProducts();
   const [currentPath, setCurrentPath] = useState("/");
+  const { t } = useLanguageContext();
 
   useEffect(() => {
     setCurrentPath(window.location.pathname);
@@ -34,11 +46,31 @@ export default function Navbar() {
   }, []);
 
   const links = [
-    { name: "Home", href: "/", icon: <Home className="w-4 h-4" /> },
-    { name: "About", href: "/about", icon: <Info className="w-4 h-4" /> },
-    { name: "Shop", href: "/shop/Unisex/pants", icon: <Store className="w-4 h-4" /> },
-    { name: "Contacts", href: "/contacts", icon: <Phone className="w-4 h-4" /> },
-    { name: "Account", href: "/account/account", icon: <User className="w-4 h-4" /> },
+    {
+      name: t("navigation.home"),
+      href: "/",
+      icon: <Home className="w-4 h-4" />,
+    },
+    {
+      name: t("navigation.about"),
+      href: "/about",
+      icon: <Info className="w-4 h-4" />,
+    },
+    {
+      name: t("navigation.shop"),
+      href: "/shop/Unisex/pants",
+      icon: <Store className="w-4 h-4" />,
+    },
+    {
+      name: t("navigation.contact"),
+      href: "/contacts",
+      icon: <Phone className="w-4 h-4" />,
+    },
+    {
+      name: t("navigation.account"),
+      href: "/account/account",
+      icon: <User className="w-4 h-4" />,
+    },
   ];
 
   const isActive = (path) => {
@@ -49,7 +81,10 @@ export default function Navbar() {
   };
 
   const toggleDrawer = (open) => (event) => {
-    if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
       return;
     }
     setDrawerOpen(open);
@@ -66,17 +101,13 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <motion.a 
+            <motion.a
               href="/"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex-shrink-0"
             >
-              <img
-                src="/mobileLogo.svg"
-                alt="logo"
-                className="h-12 w-auto"
-              />
+              <img src="/mobileLogo.svg" alt="logo" className="h-12 w-auto" />
             </motion.a>
 
             {/* Desktop Navigation */}
@@ -109,6 +140,9 @@ export default function Navbar() {
 
               {/* Action Icons */}
               <div className="flex items-center space-x-4">
+                {/* Language Selector */}
+                <LanguageSelector />
+
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -166,8 +200,9 @@ export default function Navbar() {
           open={drawerOpen}
           onClose={toggleDrawer(false)}
           PaperProps={{
-            className: "w-[280px] bg-white dark:bg-gray-900 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-95",
-            style: { boxShadow: "none" }
+            className:
+              "w-[280px] bg-white dark:bg-gray-900 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-95",
+            style: { boxShadow: "none" },
           }}
         >
           <div className="p-4">
@@ -199,6 +234,11 @@ export default function Navbar() {
                   <span className="font-medium">{link.name}</span>
                 </motion.a>
               ))}
+
+              {/* Language Selector in Mobile Menu */}
+              <div className="px-4 py-3">
+                <LanguageSelector />
+              </div>
             </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -212,7 +252,7 @@ export default function Navbar() {
                   className="flex flex-col items-center gap-1 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <SearchIcon className="w-6 h-6" />
-                  <span className="text-xs">Search</span>
+                  <span className="text-xs">{t("navbar.search")}</span>
                 </motion.button>
 
                 <motion.a
@@ -232,7 +272,7 @@ export default function Navbar() {
                   >
                     <ShoppingCart className="w-6 h-6" />
                   </Badge>
-                  <span className="text-xs">Cart</span>
+                  <span className="text-xs">{t("navbar.cart")}</span>
                 </motion.a>
 
                 <motion.a
@@ -241,7 +281,7 @@ export default function Navbar() {
                   className="flex flex-col items-center gap-1 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <UserPlus className="w-6 h-6" />
-                  <span className="text-xs">Sign Up</span>
+                  <span className="text-xs">{t("navbar.signup")}</span>
                 </motion.a>
               </div>
             </div>

@@ -1,21 +1,24 @@
 import { CircleCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
-const categories = [
-  { name: "Pants", icon: <CircleCheck />, href: "/shop/Unisex/pants" },
-  { name: "Shirts", icon: <CircleCheck />, href: "/shop/Unisex/shirts" },
-  { name: "T-shirts", icon: <CircleCheck />, href: "/shop/Unisex/shirts" },
-  { name: "Shorts", icon: <CircleCheck />, href: "/shop/Unisex/pants" },
-  { name: "Dresses", icon: <CircleCheck />, href: "/shop/Female/pants" },
-  { name: "Skirts", icon: <CircleCheck />, href: "/shop/Female/pants" },
-  { name: "Hats", icon: <CircleCheck />, href: "/shop/Unisex/hats" },
-  { name: "Watches", icon: <CircleCheck />, href: "/shop/Unisex/watches" },
-  { name: "Shoes", icon: <CircleCheck />, href: "/shop/Unisex/shoes" },
-];
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const CategorySection = () => {
+  const { t } = useLanguageContext();
   const [visibleCategories, setVisibleCategories] = useState([]);
+
+  // Define categories with translation keys instead of hardcoded names
+  const categories = [
+    { key: "pants", icon: <CircleCheck />, href: "/shop/Unisex/pants" },
+    { key: "shirts", icon: <CircleCheck />, href: "/shop/Unisex/shirts" },
+    { key: "tshirts", icon: <CircleCheck />, href: "/shop/Unisex/shirts" },
+    { key: "shorts", icon: <CircleCheck />, href: "/shop/Unisex/pants" },
+    { key: "dresses", icon: <CircleCheck />, href: "/shop/Female/pants" },
+    { key: "skirts", icon: <CircleCheck />, href: "/shop/Female/pants" },
+    { key: "hats", icon: <CircleCheck />, href: "/shop/Unisex/hats" },
+    { key: "watches", icon: <CircleCheck />, href: "/shop/Unisex/watches" },
+    { key: "shoes", icon: <CircleCheck />, href: "/shop/Unisex/shoes" },
+  ];
 
   useEffect(() => {
     const handleResize = () => {
@@ -26,18 +29,18 @@ const CategorySection = () => {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <section className="py-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center mb-12">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Browse by Categories
+          {t("categories.browseTitle")}
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-300">
-          Discover our wide range of fashion categories
+          {t("categories.browseDescription")}
         </p>
       </div>
 
@@ -45,7 +48,7 @@ const CategorySection = () => {
         {visibleCategories.map((category, index) => (
           <motion.a
             href={category.href}
-            key={category.name}
+            key={category.key}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -56,7 +59,7 @@ const CategorySection = () => {
                 {category.icon}
               </span>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                {category.name}
+                {t(`categories.items.${category.key}`)}
               </h3>
             </div>
             <div className="absolute inset-0 bg-green-50 dark:bg-green-900/20 opacity-0 transition-opacity duration-300" />

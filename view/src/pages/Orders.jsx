@@ -13,8 +13,10 @@ import {
   Search,
   Loader,
   User2,
-  Lock,
+  SettingsIcon,
+  Settings,
 } from "lucide-react";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const Orders = () => {
   const { currentUser } = useContext(CurrentUserContext);
@@ -24,6 +26,7 @@ const Orders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [activeTab, setActiveTab] = useState("orders");
+  const { t } = useLanguageContext();
 
   useEffect(() => {
     if (currentUser?.userId) {
@@ -32,6 +35,7 @@ const Orders = () => {
   }, [currentUser]);
 
   const fetchOrders = async () => {
+    // Helper function to calculate the total sum from an array of values (strings or numbers)
     try {
       setLoading(true);
       const response = await fetch(
@@ -45,7 +49,21 @@ const Orders = () => {
       setLoading(false);
     }
   };
+  const calculateTotalSpent = (orders) => {
+    const total = orders.reduce((sum, order) => {
+      const value = order.transaction ? order.transaction.amount : 0;
+      // Remove commas if the value is a string with formatting (e.g., "100,000")
+      const cleanValue =
+        typeof value === "string"
+          ? parseFloat(value.replace(/,/g, ""))
+          : value;
+      // Add to sum if the value is a valid number, otherwise add 0
+      return sum + (isNaN(cleanValue) ? 0 : cleanValue);
+    }, 0);
 
+    // Format the total with commas for display
+    return new Intl.NumberFormat("en-US").format(total);
+  };
   const filterOrders = () => {
     let filtered = [...orders];
 
@@ -102,21 +120,21 @@ const Orders = () => {
   const labels = [
     {
       icon: <User2 />,
-      text: "Account",
+      text: t("account.tabs.account"),
       value: "account",
       page: <PersonalDetails />,
     },
     {
       icon: <Package />,
-      text: "Orders",
+      text: t("account.tabs.orders"),
       value: "orders",
       page: null,
     },
     {
-      icon: <Lock />,
-      text: "Password",
-      value: "password",
-      page: null,
+      icon: <SettingsIcon />,
+      text: t("account.tabs.settings"),
+      value: "settings",
+      page: <Settings />,
     },
   ];
 
@@ -128,13 +146,75 @@ const Orders = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Your Orders
+            {t("orders.title")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Track and manage your orders
+            {t("orders.subtitle")}
           </p>
         </div>
-
+        {orders.length > 0 && (
+          <div className="my-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("orders.stats.totalOrders")}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {orders.length}
+                  </p>
+                </div>
+                <Package className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("orders.stats.pendingOrders")}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {
+                      orders.filter(
+                        (order) => order.paymentStatus === "PENDING"
+                      ).length
+                    }
+                  </p>
+                </div>
+                <Clock className="w-8 h-8 text-yellow-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("orders.stats.completedOrders")}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {
+                      orders.filter((order) => order.paymentStatus === "PAID")
+                        .length
+                    }
+                  </p>
+                </div>
+                <Package className="w-8 h-8 text-blue-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("orders.stats.totalSpent")}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    RWF {calculateTotalSpent(orders)}
+                  </p>
+                </div>
+                <Package className="w-8 h-8 text-green-500" />
+              </div>
+            </div>
+          </div>
+        )}
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -143,7 +223,7 @@ const Orders = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search orders..."
+                placeholder={t("orders.filters.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -157,10 +237,14 @@ const Orders = () => {
                 onChange={(e) => setFilter(e.target.value)}
                 className="w-full pl-4 pr-10 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white appearance-none"
               >
-                <option value="all">All Orders</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="delivering">Delivering</option>
+                <option value="all">{t("orders.filters.status.all")}</option>
+                <option value="pending">
+                  {t("orders.filters.status.pending")}
+                </option>
+                <option value="paid">{t("orders.filters.status.paid")}</option>
+                <option value="delivering">
+                  {t("orders.filters.status.delivering")}
+                </option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             </div>
@@ -185,7 +269,7 @@ const Orders = () => {
               }}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
             >
-              Reset Filters
+              {t("orders.filters.reset")}
             </button>
           </div>
         </div>
@@ -195,7 +279,7 @@ const Orders = () => {
           <div className="flex items-center justify-center py-12">
             <Loader className="w-6 h-6 text-green-600 animate-spin" />
             <span className="ml-2 text-gray-600 dark:text-gray-300">
-              Loading orders...
+              {t("orders.loading")}
             </span>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -206,12 +290,12 @@ const Orders = () => {
           >
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No Orders Found
+              {t("orders.noOrders.title")}
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
               {searchTerm || dateFilter || filter !== "all"
-                ? "No orders match your filters. Try adjusting your search criteria."
-                : "You haven't placed any orders yet."}
+                ? t("orders.noOrders.noMatch")
+                : t("orders.noOrders.empty")}
             </p>
           </motion.div>
         ) : (
@@ -227,77 +311,7 @@ const Orders = () => {
         )}
 
         {/* Order Stats */}
-        {orders.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Total Orders
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {orders.length}
-                  </p>
-                </div>
-                <Package className="w-8 h-8 text-green-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Pending Orders
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {
-                      orders.filter(
-                        (order) => order.paymentStatus === "PENDING"
-                      ).length
-                    }
-                  </p>
-                </div>
-                <Clock className="w-8 h-8 text-yellow-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Completed Orders
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {
-                      orders.filter((order) => order.paymentStatus === "PAID")
-                        .length
-                    }
-                  </p>
-                </div>
-                <Package className="w-8 h-8 text-blue-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Total Spent
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    RWF{" "}
-                    {new Intl.NumberFormat("en-US").format(
-                      orders.reduce((total, order) => {
-                        return (
-                          total +
-                          (order.transaction ? order.transaction.amount : 0)
-                        );
-                      }, 0)
-                    )}
-                  </p>
-                </div>
-                <Package className="w-8 h-8 text-green-500" />
-              </div>
-            </div>
-          </div>
-        )}
+        
       </div>
     </div>
   );

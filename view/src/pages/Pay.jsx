@@ -1,23 +1,25 @@
 /* eslint-disable no-unused-vars */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import axios from "axios";
 import MtnMoMoButton from "../components/MtnMomoBtn";
 import { useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Building2,
-  CreditCard,
-  Wallet,
-  ChevronLeft,
+import { 
+  Building2, 
+  CreditCard, 
+  Wallet, 
+  ChevronLeft, 
   CheckCircle2,
   Smartphone,
   Globe,
   Copy,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import { apiUrl } from "../lib/apis";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const PaymentPage = () => {
   const [clientId, setClientId] = useState(null);
@@ -30,6 +32,8 @@ const PaymentPage = () => {
   const [paypalError, setPaypalError] = useState(null);
   const [isPaypalLoading, setIsPaypalLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [backendError, setBackendError] = useState(null);
+  const { t } = useLanguageContext();
 
   const bankDetails = {
     bankName: "Bank of Kigali",
@@ -38,6 +42,27 @@ const PaymentPage = () => {
     swiftCode: "BKIGRWRW",
     branch: "Kigali Main Branch",
   };
+
+  const fetchClientId = useCallback(async () => {
+      try {
+        setIsPaypalLoading(true);
+        const response = await axios.get("http://localhost:5000/config/paypal");
+        if (!response.data?.clientId) {
+        throw new Error(t("payment.status.configError"));
+        }
+        setClientId(response.data.clientId);
+        setPaypalError(null);
+      } catch (error) {
+        console.error("Error fetching PayPal client ID:", error);
+      setPaypalError(t("payment.status.loadingError"));
+        message.error({
+        content: t("payment.status.loadingError"),
+          className: "custom-message error",
+        });
+      } finally {
+        setIsPaypalLoading(false);
+      }
+  }, [t]);
 
   useEffect(() => {
     if (!amount || !dataToSend || !orderId || !phoneNumber) {
@@ -48,87 +73,95 @@ const PaymentPage = () => {
   }, [amount, dataToSend, orderId, phoneNumber, navigate]);
 
   useEffect(() => {
-    const fetchClientId = async () => {
-      try {
-        setIsPaypalLoading(true);
-        const response = await axios.get("http://localhost:5000/config/paypal");
-        if (!response.data?.clientId) {
-          throw new Error("Invalid PayPal configuration received");
-        }
-        setClientId(response.data.clientId);
-        setPaypalError(null);
-      } catch (error) {
-        console.error("Error fetching PayPal client ID:", error);
-        setPaypalError(
-          "Failed to load PayPal configuration. Please try again later."
-        );
-        message.error({
-          content: "Failed to load PayPal configuration",
-          className: "custom-message error",
-        });
-      } finally {
-        setIsPaypalLoading(false);
-      }
-    };
-
     fetchClientId();
-  }, []);
+  }, [fetchClientId]);
 
   const createOrder = async (data, actions) => {
     try {
-      const response = await fetch("http://localhost:5000/create-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      setIsProcessing(true);
+      setBackendError(null);
+
+      // Updated payload to match backend requirements
+      const response = await axios.post("http://localhost:5000/create-order", {
           amount: amount,
-          currency: "USD",
-        }),
+        orderId: orderId,
       });
-      const orderData = await response.json();
-      return orderData.orderId;
+
+      // If successful, return the PayPal order ID
+      if (response.data.success) {
+        return response.data.orderId;
+      } else {
+        throw new Error(
+          response.data.message || t("payment.status.createError")
+        );
+      }
     } catch (error) {
       console.error("Error creating PayPal order:", error);
+
+      // Handle specific backend error messages
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        t("payment.status.createError");
+      setBackendError(errorMessage);
+
       message.error({
-        content: "Error creating order",
+        content: errorMessage,
         className: "custom-message error",
       });
+
+      // Rethrow to prevent PayPal from proceeding
       throw error;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const onApprove = async (data) => {
     try {
+      setIsProcessing(true);
       const response = await axios.post("http://localhost:5000/capture-order", {
         orderId: data.orderID,
+        homedel_orderId: orderId, // Pass our internal order ID
       });
 
       if (response.data.success) {
         message.success({
-          content: "Payment Successful!",
+          content: t("payment.status.success"),
           className: "custom-message success",
         });
-        // Navigate to success page or handle success
-      } else {
-        message.error({
-          content: "Payment failed",
-          className: "custom-message error",
+        // Navigate to success page
+        navigate("/order-success", {
+          state: {
+            orderId,
+            paymentType: "PayPal",
+          },
         });
+      } else {
+        throw new Error(
+          response.data.message || t("payment.status.captureError")
+        );
       }
     } catch (error) {
-      console.error("Error capturing payment:", error);
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        t("payment.status.captureError");
+      setBackendError(errorMessage);
+
       message.error({
-        content: "Error capturing payment",
+        content: errorMessage,
         className: "custom-message error",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const onError = (err) => {
     console.error("PayPal error:", err);
     message.error({
-      content: "An error occurred during payment",
+      content: t("payment.status.genericError"),
       className: "custom-message error",
     });
   };
@@ -136,7 +169,7 @@ const PaymentPage = () => {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     message.success({
-      content: "Copied to clipboard!",
+      content: t("payment.methods.bankTransfer.copySuccess"),
       className: "custom-message success",
     });
   };
@@ -146,6 +179,8 @@ const PaymentPage = () => {
   const handleMTNPayment = async () => {
     try {
       setIsProcessing(true);
+      setBackendError(null);
+
       const response = await fetch(`${apiUrl}/request-to-pay`, {
         method: "POST",
         headers: {
@@ -167,7 +202,7 @@ const PaymentPage = () => {
       if (data.success) {
         // Show success message
         message.success({
-          content: "Payment request sent successfully!",
+          content: t("payment.status.requestSent"),
           className: "custom-message success",
         });
 
@@ -186,8 +221,11 @@ const PaymentPage = () => {
       }
     } catch (error) {
       console.error("Payment error:", error);
+      const errorMessage = error.message || "Failed to process payment";
+      setBackendError(errorMessage);
+
       message.error({
-        content: error.message || "Failed to process payment",
+        content: errorMessage,
         className: "custom-message error",
       });
     } finally {
@@ -210,14 +248,14 @@ const PaymentPage = () => {
   }
 
   return (
-    <motion.div
+    <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-4xl mx-auto">
-        <motion.div
+        <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
@@ -226,20 +264,37 @@ const PaymentPage = () => {
           <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-8 sm:p-10">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-                Complete Your Payment
+                {t("payment.title")}
               </h2>
               <p className="mt-4 text-xl text-green-100">
-                Amount to pay:{" "}
+                {t("payment.amountToPay")}:{" "}
                 <span className="font-bold">RWF {formattedAmount}</span>
               </p>
             </div>
           </div>
 
+          {/* Display backend errors if any */}
+          {backendError && (
+            <div className="bg-red-50 dark:bg-red-900/20 p-4 mx-6 mt-6 rounded-lg border border-red-200 dark:border-red-800">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 mr-3" />
+                <div>
+                  <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
+                    {t("payment.status.paymentError")}
+                  </h4>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                    {backendError}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Payment Methods */}
           <div className="px-6 py-8 sm:p-10">
             <div className="space-y-6">
               {/* Bank Transfer Section */}
-              <motion.div
+              <motion.div 
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
@@ -249,17 +304,19 @@ const PaymentPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Bank Transfer
+                      {t("payment.methods.bankTransfer.title")}
                     </h3>
                     <p className="mt-2 text-gray-500 dark:text-gray-400">
-                      Pay directly to our bank account
+                      {t("payment.methods.bankTransfer.description")}
                     </p>
                   </div>
                   <button
                     onClick={() => setShowBankDetails(!showBankDetails)}
                     className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                   >
-                    {showBankDetails ? "Hide Details" : "View Details"}
+                    {showBankDetails
+                      ? t("payment.methods.bankTransfer.hideDetails")
+                      : t("payment.methods.bankTransfer.viewDetails")}
                   </button>
                 </div>
 
@@ -300,7 +357,7 @@ const PaymentPage = () => {
               </motion.div>
 
               {/* MTN Mobile Money Section */}
-              <motion.div
+              <motion.div 
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
@@ -310,10 +367,10 @@ const PaymentPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      MTN Mobile Money
+                      {t("payment.methods.mtn.title")}
                     </h3>
                     <p className="mt-2 text-gray-500 dark:text-gray-400">
-                      Pay using your MTN Mobile Money account
+                      {t("payment.methods.mtn.description")}
                     </p>
                   </div>
                 </div>
@@ -326,16 +383,16 @@ const PaymentPage = () => {
                   {isProcessing ? (
                     <div className="flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Processing...
-                    </div>
+                      {t("payment.status.processing")}
+                </div>
                   ) : (
-                    `Pay RWF ${formattedAmount} with MTN`
+                    t("payment.methods.mtn.button", { amount: formattedAmount })
                   )}
                 </button>
               </motion.div>
 
               {/* PayPal Section */}
-              <motion.div
+              <motion.div 
                 whileHover={{ scale: 1.02 }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:border-green-500 transition-all duration-300"
               >
@@ -345,10 +402,10 @@ const PaymentPage = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      PayPal
+                      {t("payment.methods.paypal.title")}
                     </h3>
                     <p className="mt-2 text-gray-500 dark:text-gray-400">
-                      Pay securely with PayPal
+                      {t("payment.methods.paypal.description")}
                     </p>
                   </div>
                 </div>
@@ -362,19 +419,15 @@ const PaymentPage = () => {
                       {paypalError}
                     </p>
                     <button
-                      onClick={() => {
-                        setPaypalError(null);
-                        setIsPaypalLoading(true);
-                        fetchClientId();
-                      }}
+                      onClick={fetchClientId}
                       className="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                     >
-                      Retry Loading PayPal
+                      {t("payment.methods.paypal.retry")}
                     </button>
                   </div>
                 ) : clientId ? (
-                  <PayPalScriptProvider
-                    options={{
+                  <PayPalScriptProvider 
+                    options={{ 
                       clientId: clientId,
                       currency: "USD",
                       intent: "capture",
@@ -392,12 +445,11 @@ const PaymentPage = () => {
                       onApprove={onApprove}
                       onError={(err) => {
                         console.error("PayPal error:", err);
-                        setPaypalError(
-                          "An error occurred with PayPal. Please try again."
-                        );
+                        setPaypalError(t("payment.status.genericError"));
                         onError(err);
                       }}
                       className="w-full"
+                      disabled={isProcessing}
                     />
                   </PayPalScriptProvider>
                 ) : null}
@@ -407,7 +459,7 @@ const PaymentPage = () => {
         </motion.div>
 
         {/* Back Button */}
-        <motion.div
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -418,7 +470,7 @@ const PaymentPage = () => {
             className="inline-flex items-center px-6 py-3 text-lg font-medium text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors duration-300"
           >
             <ChevronLeft className="w-5 h-5 mr-2" />
-            Back to Checkout
+            {t("payment.backToCheckout")}
           </button>
         </motion.div>
       </div>

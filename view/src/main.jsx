@@ -32,6 +32,9 @@ import SecurityAlert from "./pages/SecurityAlert.jsx";
 import Orders from "./pages/Orders";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PersonalDetails from "./components/PersonalDetails.jsx";
+// Import the language provider and i18n configuration
+import { LanguageProvider } from "./context/LanguageProvider";
+import "./i18n"; // Initialize i18n
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools"
 const queryClient = new QueryClient();
 
@@ -105,7 +108,7 @@ const router = createBrowserRouter([
     path: "/account/:option",
     element: (
       <CartItems>
-          <NewAccount />
+        <NewAccount />
       </CartItems>
     ),
   },
@@ -178,7 +181,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <QueryClientProvider client={queryClient}>
       <CurrentUser>
         <ThemeProvider>
-          <App />
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
         </ThemeProvider>
       </CurrentUser>
     </QueryClientProvider>

@@ -6,8 +6,10 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/ReactToastify.min.css";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const Contact = () => {
+  const { t } = useLanguageContext();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,8 +40,8 @@ const Contact = () => {
         },
         "2JC1ozQGy_9hgSnHX"
       );
-      
-      toast.success("Message sent successfully! We'll get back to you soon.", {
+
+      toast.success(t("contact.form.success"), {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -47,14 +49,14 @@ const Contact = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      
+
       setFormData({
         name: "",
         email: "",
         message: "",
       });
     } catch (error) {
-      toast.error("Failed to send message. Please try again later.", {
+      toast.error(t("contact.form.error"), {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -70,19 +72,19 @@ const Contact = () => {
   const contactInfo = [
     {
       icon: <Mail className="w-6 h-6" />,
-      title: "Email",
+      title: t("contact.info.email"),
       value: "homedel.rw@gmail.com",
       link: "mailto:homedel.rw@gmail.com",
     },
     {
       icon: <Phone className="w-6 h-6" />,
-      title: "Phone",
+      title: t("contact.info.phone"),
       value: "+250798509561",
       link: "tel:+250798509561",
     },
     {
       icon: <MapPin className="w-6 h-6" />,
-      title: "Address",
+      title: t("contact.info.address"),
       value: "123 Main St, Kigali, Rwanda",
       link: "https://maps.google.com",
     },
@@ -92,7 +94,7 @@ const Contact = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 font-poppins">
       <Navbar />
       <ToastContainer />
-      
+
       <main className="relative">
         {/* Background Elements */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -106,11 +108,10 @@ const Contact = () => {
             className="text-center mb-16"
           >
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Get in Touch
+              {t("contact.hero.title")}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Have questions or feedback? We'd love to hear from you. Send us a message
-              and we'll respond as soon as possible.
+              {t("contact.hero.subtitle")}
             </p>
           </motion.div>
 
@@ -123,7 +124,7 @@ const Contact = () => {
             >
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                  Contact Information
+                  {t("contact.info.title")}
                 </h2>
                 <div className="space-y-6">
                   {contactInfo.map((info, index) => (
@@ -153,8 +154,6 @@ const Contact = () => {
                   ))}
                 </div>
               </div>
-
-            
             </motion.div>
 
             {/* Contact Form */}
@@ -164,7 +163,7 @@ const Contact = () => {
               className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg"
             >
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                Send Us a Message
+                {t("contact.form.title")}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -172,7 +171,7 @@ const Contact = () => {
                     htmlFor="name"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Your Name
+                    {t("contact.form.name.label")}
                   </label>
                   <input
                     type="text"
@@ -181,17 +180,17 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200"
-                    placeholder="John Doe"
+                    placeholder={t("contact.form.name.placeholder")}
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Email Address
+                    {t("contact.form.email.label")}
                   </label>
                   <input
                     type="email"
@@ -200,7 +199,7 @@ const Contact = () => {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200"
-                    placeholder="john@example.com"
+                    placeholder={t("contact.form.email.placeholder")}
                     required
                   />
                 </div>
@@ -210,7 +209,7 @@ const Contact = () => {
                     htmlFor="message"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Your Message
+                    {t("contact.form.message.label")}
                   </label>
                   <textarea
                     id="message"
@@ -219,7 +218,7 @@ const Contact = () => {
                     onChange={handleChange}
                     rows="5"
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200 resize-none"
-                    placeholder="Your message here..."
+                    placeholder={t("contact.form.message.placeholder")}
                     required
                   ></textarea>
                 </div>
@@ -234,12 +233,12 @@ const Contact = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Sending...
+                      {t("contact.form.sending")}
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Send Message
+                      {t("contact.form.send")}
                     </>
                   )}
                 </motion.button>
@@ -248,7 +247,7 @@ const Contact = () => {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

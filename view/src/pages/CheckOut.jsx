@@ -9,8 +9,10 @@ import { toast, ToastContainer } from "react-toastify";
 import rwandaData from "../../constants/rwanda";
 import UserLocation from "../components/UserLocation";
 import { apiUrl } from "../lib/apis";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const OrderForm = () => {
+  const { t } = useLanguageContext();
   const { theme } = useContext(ThemeContext);
   const { currentUser } = useContext(CurrentUserContext);
   const { itemsOnCart } = useContext(CartContext);
@@ -225,15 +227,14 @@ const OrderForm = () => {
       termsAccepted,
     } = formData;
 
-    if (!phone) errors.phone = "Phone number is required";
-    if (!province) errors.province = "Province is required";
-    if (!district) errors.district = "District is required";
-    if (!sector) errors.sector = "Sector is required";
-    if (!cell) errors.cell = "Cell is required";
-    if (!village) errors.village = "Village is required";
-    if (!street) errors.street = "Street is required";
-    if (!termsAccepted)
-      errors.termsAccepted = "You must accept the terms and conditions";
+    if (!phone) errors.phone = t("checkout.validation.phone");
+    if (!province) errors.province = t("checkout.validation.province");
+    if (!district) errors.district = t("checkout.validation.district");
+    if (!sector) errors.sector = t("checkout.validation.sector");
+    if (!cell) errors.cell = t("checkout.validation.cell");
+    if (!village) errors.village = t("checkout.validation.village");
+    if (!street) errors.street = t("checkout.validation.street");
+    if (!termsAccepted) errors.termsAccepted = t("checkout.validation.terms");
 
     return errors;
   };
@@ -247,30 +248,30 @@ const OrderForm = () => {
       return;
     }
 
-    // Check for required data
+      // Check for required data
     if (!currentUser) {
-      toast.error("Please log in to continue");
+      toast.error(t("checkout.errors.login"));
       navigate("/login");
       return;
     }
 
     if (!itemsOnCart || itemsOnCart.length === 0) {
-      toast.error("Your cart is empty");
+      toast.error(t("checkout.errors.emptyCart"));
       navigate("/cart");
       return;
     }
 
     if (!cost) {
-      toast.error("Invalid order amount");
+      toast.error(t("checkout.errors.invalidOrder"));
       navigate("/cart");
       return;
     }
 
     // Check if location is selected
     if (!selectedLocation) {
-      toast.error("Please select a delivery location on the map");
-      return;
-    }
+      toast.error(t("checkout.validation.location"));
+        return;
+      }
 
     try {
       const orderData = {
@@ -306,7 +307,7 @@ const OrderForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create order");
+        throw new Error(data.error || t("checkout.errors.orderCreation"));
       }
 
       // If order is created successfully, navigate to payment page
@@ -320,7 +321,7 @@ const OrderForm = () => {
       });
     } catch (error) {
       console.error("Order creation error:", error);
-      toast.error(error.message || "Failed to create order. Please try again.");
+      toast.error(error.message || t("checkout.errors.orderCreation"));
     }
   };
 
@@ -328,12 +329,12 @@ const OrderForm = () => {
   const { cartTotal: subtotal } = location.state || {};
   useEffect(() => {
     if (!subtotal) {
-      toast.error("Invalid cart total. Please try again.");
+      toast.error(t("checkout.errors.invalidTotal"));
       navigate("/cart");
     } else {
       setCost(subtotal);
     }
-  }, [subtotal, navigate]);
+  }, [subtotal, navigate, t]);
 
   const formattedCost = new Intl.NumberFormat("en-US").format(cost);
 
@@ -350,7 +351,7 @@ const OrderForm = () => {
   };
 
   return (
-    <motion.div
+    <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -367,29 +368,29 @@ const OrderForm = () => {
           className={`${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
         >
           {/* Order Form */}
-          <motion.form
+          <motion.form 
             className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 sm:p-8"
             initial={{ x: -20 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <motion.h2
+            <motion.h2 
               className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8 text-center"
               initial={{ y: -10 }}
               animate={{ y: 0 }}
             >
-              Complete your order
+              {t("checkout.title")}
             </motion.h2>
 
             {/* Personal Details Section */}
-            <motion.div
+            <motion.div 
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
               <h3 className="text-xl font-semibold text-green-600 dark:text-green-400 mb-6">
-                Personal Details
+                {t("checkout.personalDetails.title")}
               </h3>
               <div className="space-y-4">
                 <div className="relative">
@@ -397,13 +398,13 @@ const OrderForm = () => {
                     className="w-full p-4 outline-none rounded-lg border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100 focus:border-green-500 transition-all duration-300 ease-in-out"
                     type="tel"
                     minLength={10}
-                    placeholder="Phone number"
+                    placeholder={t("checkout.personalDetails.phone")}
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                   />
                   {formErrors.phone && (
-                    <motion.p
+                    <motion.p 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-red-500 text-sm mt-2"
@@ -416,35 +417,27 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Delivery Address Section */}
-            <motion.div
+            <motion.div 
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
               <h3 className="text-xl font-semibold text-green-600 dark:text-green-400 mb-6">
-                Delivery Address
+                {t("checkout.deliveryAddress.title")}
               </h3>
 
               {/* Location Instructions */}
               <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <h4 className="text-lg font-semibold text-blue-700 dark:text-blue-400 mb-2">
-                  How to select your delivery location
+                  {t("checkout.deliveryAddress.instructions.title")}
                 </h4>
                 <ul className="list-disc list-inside space-y-2 text-blue-600 dark:text-blue-300">
-                  <li>
-                    Search for a nearby shopping center, landmark, or your exact
-                    location
-                  </li>
-                  <li>
-                    Use the map to drag the marker to your precise delivery
-                    point
-                  </li>
-                  <li>You can also use the "Use Current Location" feature</li>
-                  <li>
-                    Make sure to select a location that&apos;s easily accessible
-                    for delivery
-                  </li>
+                  {t("checkout.deliveryAddress.instructions.steps", {
+                    returnObjects: true,
+                  }).map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
                 </ul>
               </div>
 
@@ -460,7 +453,7 @@ const OrderForm = () => {
                   <input
                     className="w-full p-4 outline-none rounded-lg border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100 focus:border-green-500 transition-all duration-300 ease-in-out"
                     type="text"
-                    placeholder="Street name, number, or landmarks"
+                    placeholder={t("checkout.deliveryAddress.form.street")}
                     name="street"
                     value={formData.street}
                     onChange={handleChange}
@@ -481,7 +474,7 @@ const OrderForm = () => {
                     onChange={handleProvinceChange}
                   >
                     <option value="" disabled>
-                      Select a province
+                      {t("checkout.deliveryAddress.form.province")}
                     </option>
                     {availableProvinces.map((province, index) => (
                       <option key={index} value={province}>
@@ -507,8 +500,8 @@ const OrderForm = () => {
                   >
                     <option value="" disabled>
                       {formData.province
-                        ? "Select a district"
-                        : "Select a province first"}
+                        ? t("checkout.deliveryAddress.form.district")
+                        : t("checkout.deliveryAddress.form.provinceFirst")}
                     </option>
                     {availableDistricts.map((district, index) => (
                       <option key={index} value={district}>
@@ -534,8 +527,8 @@ const OrderForm = () => {
                   >
                     <option value="" disabled>
                       {formData.district
-                        ? "Select a sector"
-                        : "Select a district first"}
+                        ? t("checkout.deliveryAddress.form.sector")
+                        : t("checkout.deliveryAddress.form.districtFirst")}
                     </option>
                     {availableSectors.map((sector, index) => (
                       <option key={index} value={sector}>
@@ -561,8 +554,8 @@ const OrderForm = () => {
                   >
                     <option value="" disabled>
                       {formData.sector
-                        ? "Select a cell"
-                        : "Select a sector first"}
+                        ? t("checkout.deliveryAddress.form.cell")
+                        : t("checkout.deliveryAddress.form.sectorFirst")}
                     </option>
                     {availableCells.map((cell, index) => (
                       <option key={index} value={cell}>
@@ -588,8 +581,8 @@ const OrderForm = () => {
                   >
                     <option value="" disabled>
                       {formData.cell
-                        ? "Select a village"
-                        : "Select a cell first"}
+                        ? t("checkout.deliveryAddress.form.village")
+                        : t("checkout.deliveryAddress.form.cellFirst")}
                     </option>
                     {availableVillages.map((village, index) => (
                       <option key={index} value={village}>
@@ -607,14 +600,14 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Amount to pay Section */}
-            <motion.div
+            <motion.div 
               className="mb-8 bg-green-50 dark:bg-gray-700 p-6 rounded-xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
               <h3 className="text-xl font-semibold text-green-600 dark:text-green-400 mb-4">
-                Amount to pay
+                {t("checkout.payment.title")}
               </h3>
               <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 RWF {formattedCost}
@@ -622,7 +615,7 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Terms and Conditions */}
-            <motion.div
+            <motion.div 
               className="mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -636,7 +629,7 @@ const OrderForm = () => {
                   className="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300 transition-all duration-300"
                 />
                 <span className="text-gray-700 dark:text-gray-300">
-                  I agree to the terms and conditions of this service
+                  {t("checkout.terms.accept")}
                 </span>
               </label>
               {formErrors.termsAccepted && (
@@ -647,7 +640,7 @@ const OrderForm = () => {
             </motion.div>
 
             {/* Important Information Section */}
-            <motion.div
+            <motion.div 
               className="mb-8 bg-red-50 dark:bg-gray-700/50 p-6 rounded-xl flex items-start space-x-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -655,15 +648,12 @@ const OrderForm = () => {
             >
               <CgInfo className="text-3xl text-red-500 flex-shrink-0" />
               <p className="text-gray-700 dark:text-gray-300 text-sm">
-                Note that after you click on complete purchase, you will be
-                called shortly on the phone number you entered. You will pay
-                using the method provided after getting your products. In case
-                of any issues, call or WhatsApp us on{" "}
+                {t("checkout.importantInfo.content")}{" "}
                 <span className="font-semibold">+250798509561</span>.
               </p>
             </motion.div>
 
-            <motion.div
+            <motion.div 
               className="flex flex-col sm:flex-row justify-end gap-4 mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -674,13 +664,13 @@ const OrderForm = () => {
                 type="button"
                 className="px-6 py-3 text-base font-medium rounded-lg border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out"
               >
-                Cancel
+                {t("checkout.buttons.cancel")}
               </button>
               <button
                 onClick={handleSubmit}
                 className="px-6 py-3 text-base font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transform hover:scale-105 transition-all duration-300 ease-in-out"
               >
-                Pay RWF {formattedCost}
+                {t("checkout.buttons.pay")} RWF {formattedCost}
               </button>
             </motion.div>
           </motion.form>

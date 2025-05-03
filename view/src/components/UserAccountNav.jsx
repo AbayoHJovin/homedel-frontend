@@ -8,16 +8,13 @@ import { apiUrl } from "../lib/apis";
 import { toast, ToastContainer } from "react-toastify";
 
 const UserNav = ({ currentBar }) => {
-  const [showNotificationDropdown, setShowNotificationDropdown] =
     useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
   const { theme, toggleTheme } = useContext(ThemeContext);
   const { currentUser } = useContext(CurrentUserContext);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const notificationRef = useRef();
   const userRef = useRef();
 
   const handleConfirmLogout = () => {
@@ -41,24 +38,6 @@ const UserNav = ({ currentBar }) => {
         setIsLoggingOut(false);
       });
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotificationDropdown(false);
-      }
-      if (userRef.current && !userRef.current.contains(event.target)) {
-        setShowUserDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -122,33 +101,6 @@ const UserNav = ({ currentBar }) => {
 
         {/* Right Side Actions */}
         <div className="flex items-center space-x-4">
-          {/* Notification Icon */}
-          <div className="relative" ref={notificationRef}>
-            <button
-              className="relative p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-              onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
-            >
-              <FaBell className="h-5 w-5" />
-              {hasNewNotifications && (
-                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full" />
-              )}
-            </button>
-
-            {/* Notification Dropdown */}
-            <div
-              className={`absolute right-0 mt-2 w-80 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 transform transition-all duration-200 ${
-                showNotificationDropdown
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-2 pointer-events-none"
-              }`}
-            >
-              <div className="p-4 text-sm text-gray-600 dark:text-gray-300">
-                No new notifications
-              </div>
-            </div>
-          </div>
-
-          {/* User Profile */}
           <div className="relative" ref={userRef}>
             <button
               className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -183,6 +135,13 @@ const UserNav = ({ currentBar }) => {
                 >
                   <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                 </button> */}
+                <a
+                  href="/account/settings"
+                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-md transition-colors duration-200"
+                >
+                  <FaUserAlt className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </a>
                 <button
                   onClick={handleConfirmLogout}
                   className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors duration-200"

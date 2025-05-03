@@ -50,6 +50,7 @@ const UpdatePassword = () => {
           email: decodeURIComponent(email),
           newPassword: formData.password,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();

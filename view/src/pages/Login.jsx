@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { apiUrl } from "../lib/apis";
 import { useNavigate } from "react-router-dom";
 import { CurrentUserContext } from "../../constants/currentUser";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 // Custom toast functions
 const showSuccessToast = (message) => {
@@ -56,6 +57,7 @@ const handleApiError = (error) => {
 };
 
 const Login = () => {
+  const { t } = useLanguageContext();
   const navigate = useNavigate();
   const { updateUserSession } = useContext(CurrentUserContext);
   const [formData, setFormData] = useState({
@@ -72,7 +74,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
-      showErrorToast("Please fill in all fields");
+      showErrorToast(t("login.errors.fillFields"));
       return;
     }
 
@@ -90,13 +92,13 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Invalid credentials");
+        throw new Error(data.message || t("login.errors.invalidCredentials"));
       }
 
       // Update user session using context function
       updateUserSession(data.user, data.accessToken, data.isAdmin, rememberMe);
 
-      showSuccessToast("Login successful!");
+      showSuccessToast(t("login.success"));
 
       setTimeout(() => {
         if (data.isAdmin) {
@@ -125,10 +127,10 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        showSuccessToast("Password reset instructions sent to your email");
+        showSuccessToast(t("login.resetPassword.success"));
         setTimeout(() => setShowForgotPassword(false), 3000);
       } else {
-        showErrorToast(data.message || "Failed to send reset instructions");
+        showErrorToast(data.message || t("login.resetPassword.error"));
       }
     } catch (error) {
       handleApiError(error);
@@ -144,10 +146,10 @@ const Login = () => {
           <>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Welcome Back
+                {t("login.title")}
               </h2>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Sign in to your account to continue
+                {t("login.subtitle")}
               </p>
             </div>
 
@@ -157,7 +159,7 @@ const Login = () => {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Email
+                  {t("login.form.email.label")}
                 </label>
                 <input
                   id="email"
@@ -169,7 +171,7 @@ const Login = () => {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="you@example.com"
+                  placeholder={t("login.form.email.placeholder")}
                 />
               </div>
 
@@ -179,14 +181,14 @@ const Login = () => {
                     htmlFor="password"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Password
+                    {t("login.form.password.label")}
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
                     className="text-sm font-medium text-green-600 hover:text-green-500"
                   >
-                    Forgot password?
+                    {t("login.form.password.forgot")}
                   </button>
                 </div>
                 <div className="mt-1 relative">
@@ -200,7 +202,7 @@ const Login = () => {
                       setFormData({ ...formData, password: e.target.value })
                     }
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="••••••••"
+                    placeholder={t("login.form.password.placeholder")}
                   />
                   <button
                     type="button"
@@ -230,7 +232,7 @@ const Login = () => {
                     htmlFor="remember-me"
                     className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
                   >
-                    Remember me
+                    {t("login.form.rememberMe")}
                   </label>
                 </div>
               </div>
@@ -240,18 +242,18 @@ const Login = () => {
                 disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? t("login.form.signingIn") : t("login.form.signIn")}
               </button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Don&apos;t have an account?{" "}
+                {t("login.form.noAccount")}{" "}
                 <a
                   href="/signup"
                   className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
                 >
-                  Sign up
+                  {t("login.form.signUp")}
                 </a>
               </p>
             </div>
@@ -260,10 +262,10 @@ const Login = () => {
           <div>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Reset Password
+                {t("login.resetPassword.title")}
               </h2>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Enter your email to receive reset instructions
+                {t("login.resetPassword.subtitle")}
               </p>
             </div>
 
@@ -273,7 +275,7 @@ const Login = () => {
                   htmlFor="reset-email"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Email address
+                  {t("login.resetPassword.email")}
                 </label>
                 <input
                   id="reset-email"
@@ -283,7 +285,7 @@ const Login = () => {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-                  placeholder="you@example.com"
+                  placeholder={t("login.form.email.placeholder")}
                 />
               </div>
 
@@ -293,14 +295,16 @@ const Login = () => {
                   onClick={() => setShowForgotPassword(false)}
                   className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
-                  Cancel
+                  {t("login.resetPassword.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isResetting}
                   className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                 >
-                  {isResetting ? "Sending..." : "Send Reset Link"}
+                  {isResetting
+                    ? t("login.resetPassword.sending")
+                    : t("login.resetPassword.send")}
                 </button>
               </div>
             </form>

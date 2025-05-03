@@ -25,8 +25,10 @@ import {
   showErrorToast,
   showWarningToast,
 } from "../utils/toastConfig.jsx";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 const CartPage = () => {
+  const { t } = useLanguageContext();
   const { theme } = useContext(ThemeContext);
   const { itemsOnCart, deleteItem, UpdateResponse, updateCartItem } =
     useContext(CartContext);
@@ -62,7 +64,7 @@ const CartPage = () => {
     if (value > stock) {
       setQuantityError({
         index,
-        message: `Only ${stock} items available in stock`,
+        message: t("cart.table.quantityError", { stock }),
       });
       return;
     }
@@ -86,7 +88,7 @@ const CartPage = () => {
   const confirmDelete = () => {
     deleteItem(deleteModal.itemId);
     setDeleteModal({ show: false, itemId: null });
-    message.success("Item removed from cart");
+    message.success(t("cart.notifications.removed"));
   };
 
   const handleCheck = () => {
@@ -100,23 +102,23 @@ const CartPage = () => {
   useEffect(() => {
     if (UpdateResponse) {
       if (UpdateResponse === "Insufficient stock for product.") {
-        message.error("Insufficient stock for product.");
+        message.error(t("cart.notifications.insufficientStock"));
       } else {
-        message.success("Cart updated");
+        message.success(t("cart.notifications.updated"));
       }
     }
-  }, [UpdateResponse]);
+  }, [UpdateResponse, t]);
 
   const goToShop = () => (
     <div className="flex h-screen flex-col justify-center items-center content-center">
       <h1 className="text-black dark:text-white">
-        No item is found in your cart.
+        {t("cart.emptyCart.message")}
       </h1>
       <button
         onClick={() => navigate("/shop/Unisex/pants")}
         className="bg-green-900 text-white my-2 p-3 px-5 rounded-md"
       >
-        Shop Now
+        {t("cart.emptyCart.shopNow")}
       </button>
     </div>
   );
@@ -133,10 +135,10 @@ const CartPage = () => {
             <ShoppingBag className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Not Signed In
+            {t("cart.notLoggedIn.title")}
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            Please sign in or create an account to access your shopping cart
+            {t("cart.notLoggedIn.message")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
@@ -146,7 +148,7 @@ const CartPage = () => {
               href="/login"
               className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-white bg-green-600 hover:bg-green-700 transition-all duration-200 font-medium"
             >
-              Sign In
+              {t("cart.notLoggedIn.signIn")}
             </motion.a>
             <motion.a
               whileHover={{ scale: 1.02 }}
@@ -154,7 +156,7 @@ const CartPage = () => {
               href="/signup"
               className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 dark:text-green-400 transition-all duration-200 font-medium"
             >
-              Create Account
+              {t("cart.notLoggedIn.createAccount")}
             </motion.a>
             <motion.a
               whileHover={{ scale: 1.02 }}
@@ -163,7 +165,7 @@ const CartPage = () => {
               className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t("cart.notLoggedIn.back")}
             </motion.a>
           </div>
         </div>
@@ -191,23 +193,23 @@ const CartPage = () => {
                 <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Remove Item
+                {t("cart.controls.remove")}
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Are you sure you want to remove this item from your cart?
+                {t("cart.controls.removeConfirm")}
               </p>
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   onClick={() => setDeleteModal({ show: false, itemId: null })}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                 >
-                  Cancel
+                  {t("checkout.buttons.cancel")}
                 </button>
                 <button
                   onClick={confirmDelete}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200"
                 >
-                  Remove
+                  {t("cart.controls.remove")}
                 </button>
               </div>
             </div>
@@ -226,19 +228,19 @@ const CartPage = () => {
       });
 
       if (response.ok) {
-        showSuccessToast("Item removed from cart");
+        showSuccessToast(t("cart.notifications.removed"));
         // ... rest of success handling
       } else {
-        showErrorToast("Failed to remove item from cart");
+        showErrorToast(t("cart.notifications.errorRemove"));
       }
     } catch (error) {
-      showErrorToast("Error removing item from cart");
+      showErrorToast(t("cart.notifications.errorRemove"));
     }
   };
 
   const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) {
-      showWarningToast("Quantity cannot be less than 1");
+      showWarningToast(t("cart.notifications.invalidQuantity"));
       return;
     }
 
@@ -251,13 +253,13 @@ const CartPage = () => {
       });
 
       if (response.ok) {
-        showSuccessToast("Cart updated successfully");
+        showSuccessToast(t("cart.notifications.updated"));
         // ... rest of success handling
       } else {
-        showErrorToast("Failed to update cart");
+        showErrorToast(t("cart.notifications.error"));
       }
     } catch (error) {
-      showErrorToast("Error updating cart");
+      showErrorToast(t("cart.notifications.error"));
     }
   };
 
@@ -296,23 +298,23 @@ const CartPage = () => {
               <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                 <div className="p-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Shopping Cart
+                    {t("cart.title")}
                   </h2>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                           <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Product
+                            {t("cart.table.product")}
                           </th>
                           <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Price
+                            {t("cart.table.price")}
                           </th>
                           <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Quantity
+                            {t("cart.table.quantity")}
                           </th>
                           <th className="text-left py-4 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Total
+                            {t("cart.table.total")}
                           </th>
                           <th className="py-4 px-4"></th>
                         </tr>
@@ -353,7 +355,8 @@ const CartPage = () => {
                                     {item.product.prodName}
                                   </h3>
                                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Stock: {item.product.stock}
+                                    {t("cart.table.stock")}:{" "}
+                                    {item.product.stock}
                                   </p>
                                 </div>
                               </div>
@@ -460,12 +463,12 @@ const CartPage = () => {
               {/* Cart Summary */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 h-fit">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                  Cart Summary
+                  {t("cart.summary.title")}
                 </h2>
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Subtotal
+                      {t("cart.summary.subtotal")}
                     </span>
                     <span className="text-gray-900 dark:text-white font-medium">
                       RWF {new Intl.NumberFormat("en-US").format(cartTotal)}
@@ -473,7 +476,7 @@ const CartPage = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Shipping
+                      {t("cart.summary.shipping")}
                     </span>
                     <span className="text-green-600 dark:text-green-400 font-medium">
                       Free
@@ -482,7 +485,7 @@ const CartPage = () => {
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <div className="flex justify-between">
                       <span className="text-gray-900 dark:text-white font-medium">
-                        Total
+                        {t("cart.summary.total")}
                       </span>
                       <span className="text-gray-900 dark:text-white font-bold">
                         RWF {new Intl.NumberFormat("en-US").format(cartTotal)}
@@ -493,7 +496,7 @@ const CartPage = () => {
                     onClick={handleCheck}
                     className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
                   >
-                    Proceed to Checkout
+                    {t("cart.summary.checkout")}
                   </button>
                 </div>
               </div>

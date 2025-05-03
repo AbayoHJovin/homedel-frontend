@@ -71,12 +71,12 @@ export default function ProductTable() {
   const togglePopularity = async (prodId, popularity) => {
     try {
       await fetch(`${apiUrl}/makeAPopularProduct?prodId=${prodId}`, {
-        method: "PATCH",
-        headers: {
+          method: "PATCH",
+          headers: {
           popularity: popularity ? "true" : "false",
         },
       });
-      fetchProducts();
+        fetchProducts();
     } catch (error) {
       console.error("Error toggling popularity:", error);
     }
@@ -102,11 +102,11 @@ export default function ProductTable() {
         </h1>
         <div className="flex flex-col items-center justify-center gap-3 mb-6 w-full">
           <div className="flex flex-row w-full sm:w-[60%] max-w-xl gap-2 bg-white rounded-lg shadow p-2">
-            <input
-              type="text"
+        <input
+          type="text"
               placeholder="Search popular products"
-              value={searchTerm}
-              onChange={handleSearch}
+          value={searchTerm}
+          onChange={handleSearch}
               className="flex-1 px-3 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm bg-gray-50"
             />
           </div>
@@ -166,7 +166,7 @@ export default function ProductTable() {
                               onClick={() => handleToggleDescription(index)}
                             >
                               Show Less
-                            </button>
+                        </button>
                           )}
                         </>
                       ) : (
@@ -178,7 +178,7 @@ export default function ProductTable() {
                               onClick={() => handleToggleDescription(index)}
                             >
                               Show More
-                            </button>
+                        </button>
                           )}
                         </>
                       )}
@@ -205,10 +205,10 @@ export default function ProductTable() {
                             togglePopularity(product.prodId, false)
                           }
                         >
-                          <CgMathMinus
+                            <CgMathMinus
                             className="text-yellow-500 hover:text-yellow-700 text-xl"
-                            title="Remove from popular products"
-                          />
+                              title="Remove from popular products"
+                            />
                         </button>
                       </div>
                     </td>

@@ -10,6 +10,7 @@ import {
   showWarningToast,
   handleApiError,
 } from "../utils/toastConfig.jsx";
+import { useLanguageContext } from "../context/LanguageProvider";
 
 // Custom Toast Components
 const SuccessToast = ({ message }) => (
@@ -43,6 +44,7 @@ const WarningToast = ({ message }) => (
 );
 
 const SignupForm = () => {
+  const { t } = useLanguageContext();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -66,37 +68,35 @@ const SignupForm = () => {
 
   const validateForm = () => {
     if (!formData.firstName.trim()) {
-      showWarningToast("First name is required");
+      showWarningToast(t("signup.validation.firstNameRequired"));
       return false;
     }
     if (!formData.lastName.trim()) {
-      showWarningToast("Last name is required");
+      showWarningToast(t("signup.validation.lastNameRequired"));
       return false;
     }
     if (!formData.email.trim()) {
-      showWarningToast("Email is required");
+      showWarningToast(t("signup.validation.emailRequired"));
       return false;
     }
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      showWarningToast("Please enter a valid email address");
+      showWarningToast(t("signup.validation.emailValid"));
       return false;
     }
     if (!formData.password) {
-      showWarningToast("Password is required");
+      showWarningToast(t("signup.validation.passwordRequired"));
       return false;
     }
     if (formData.password.length < 6) {
-      showWarningToast("Password must be at least 6 characters long");
+      showWarningToast(t("signup.validation.passwordLength"));
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
-      showErrorToast("Passwords do not match");
+      showErrorToast(t("signup.validation.passwordsMatch"));
       return false;
     }
     if (!agreedToTerms) {
-      showWarningToast(
-        "Please agree to the Terms of Service and Privacy Policy"
-      );
+      showWarningToast(t("signup.validation.agreeTerms"));
       return false;
     }
     return true;
@@ -124,10 +124,10 @@ const SignupForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Something went wrong");
+        throw new Error(data.message || t("signup.error"));
       }
 
-      showSuccessToast("Account created successfully! Redirecting to login...");
+      showSuccessToast(t("signup.success"));
       setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
       handleApiError(error);
@@ -141,10 +141,10 @@ const SignupForm = () => {
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Create Your Account
+            {t("signup.title")}
           </h2>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Join us for sustainable fashion
+            {t("signup.subtitle")}
           </p>
         </div>
 
@@ -155,7 +155,7 @@ const SignupForm = () => {
                 htmlFor="firstName"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                First Name
+                {t("signup.form.firstName")}
               </label>
               <input
                 id="firstName"
@@ -172,7 +172,7 @@ const SignupForm = () => {
                 htmlFor="lastName"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Last Name
+                {t("signup.form.lastName")}
               </label>
               <input
                 id="lastName"
@@ -191,7 +191,7 @@ const SignupForm = () => {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Email
+              {t("signup.form.email")}
             </label>
             <input
               id="email"
@@ -209,7 +209,7 @@ const SignupForm = () => {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Password
+              {t("signup.form.password")}
             </label>
             <div className="mt-1 relative">
               <input
@@ -240,7 +240,7 @@ const SignupForm = () => {
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Confirm Password
+              {t("signup.form.confirmPassword")}
             </label>
             <div className="mt-1 relative">
               <input
@@ -279,17 +279,35 @@ const SignupForm = () => {
               htmlFor="terms"
               className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
             >
-              I agree to the{" "}
-              <a href="/terms" className="text-green-600 hover:text-green-500">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a
-                href="/privacy"
-                className="text-green-600 hover:text-green-500"
-              >
-                Privacy Policy
-              </a>
+              {t("signup.form.agreeTerms")
+                .split(" ")
+                .map((word, i, arr) => {
+                  if (word === "Terms") {
+                    return (
+                      <a
+                        key={i}
+                        href="/terms"
+                        className="text-green-600 hover:text-green-500"
+                      >
+                        {t("signup.form.terms")}
+                      </a>
+                    );
+                  } else if (word === "Privacy") {
+                    return (
+                      <a
+                        key={i}
+                        href="/privacy"
+                        className="text-green-600 hover:text-green-500"
+                      >
+                        {t("signup.form.privacy")}
+                      </a>
+                    );
+                  } else if (i === arr.length - 1) {
+                    return <span key={i}>{word}</span>;
+                  } else {
+                    return <span key={i}>{word + " "}</span>;
+                  }
+                })}
             </label>
           </div>
 
@@ -298,18 +316,18 @@ const SignupForm = () => {
             disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading ? t("signup.form.creating") : t("signup.form.create")}
           </button>
         </form>
 
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{" "}
+            {t("signup.form.haveAccount")}{" "}
             <a
               href="/login"
               className="font-medium text-green-600 hover:text-green-500"
             >
-              Sign in
+              {t("signup.form.signIn")}
             </a>
           </p>
         </div>

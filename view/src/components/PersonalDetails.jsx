@@ -9,6 +9,69 @@ import Loader3 from "./Loading3";
 import { toast, ToastContainer } from "react-toastify";
 import { message } from "antd";
 import { FaUserAlt } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+// Mock data for demonstration
+const DEMO_ADDRESSES = [
+  {
+    id: 1,
+    name: "Home Address",
+    street: "123 Green Avenue",
+    city: "Cityville",
+    state: "State",
+    zip: "12345",
+    country: "United States",
+    default: true,
+  },
+  {
+    id: 2,
+    name: "Office Address",
+    street: "456 Business Park",
+    city: "Commerce City",
+    state: "State",
+    zip: "67890",
+    country: "United States",
+    default: false,
+  },
+];
+
+const DEMO_PAYMENT_METHODS = [
+  {
+    id: 1,
+    type: "VISA",
+    last4: "4242",
+    expiry: "12/25",
+    default: true,
+  },
+  {
+    id: 2,
+    type: "MC",
+    last4: "8888",
+    expiry: "06/26",
+    default: false,
+  },
+];
+
+const DEMO_RECENT_ACTIVITY = [
+  {
+    id: 1,
+    icon: "📦",
+    description: "Order #1234 was delivered",
+    date: "2 days ago",
+  },
+  {
+    id: 2,
+    icon: "💰",
+    description: "You saved $25 with your recent purchase",
+    date: "1 week ago",
+  },
+  {
+    id: 3,
+    icon: "⭐",
+    description: "You left a review for Cotton T-shirt",
+    date: "2 weeks ago",
+  },
+];
 
 const PersonalDetails = () => {
   const { theme } = useContext(ThemeContext);
@@ -72,6 +135,7 @@ const PersonalDetails = () => {
         formDatas,
         {
           headers: { "Content-Type": "multipart/form-data" },
+          credentials: "include",
         }
       );
 
@@ -94,6 +158,40 @@ const PersonalDetails = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Enhanced user data with fallbacks for UI rendering
+  const getUserData = () => {
+    if (!currentUser) return null;
+
+    return {
+      ...currentUser,
+      orders: currentUser.orders || [],
+      created: currentUser.created || "2023-01-01",
+      wishlist: currentUser.wishlist || [],
+      reviews: currentUser.reviews || [],
+      addresses: currentUser.addresses || DEMO_ADDRESSES,
+      paymentMethods: currentUser.paymentMethods || DEMO_PAYMENT_METHODS,
+      recentActivity: currentUser.recentActivity || DEMO_RECENT_ACTIVITY,
+    };
+  };
+
+  const userData = getUserData();
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
   };
 
   if (!currentUser) {
@@ -145,18 +243,30 @@ const PersonalDetails = () => {
         <UserNav currentBar="Personal Details" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+      >
+        <div className="space-y-6 sm:space-y-8">
           {/* Profile Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <motion.div
+            variants={itemVariants}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 md:p-8"
+          >
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
               Profile Information
             </h2>
 
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
               {/* Profile Picture */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className="relative group">
+              <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative group"
+                >
                   <img
                     src={
                       formData.previewImage ||
@@ -164,7 +274,7 @@ const PersonalDetails = () => {
                       "/default-avatar.png"
                     }
                     alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover ring-4 ring-green-50 dark:ring-green-900"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover ring-4 ring-green-50 dark:ring-green-900"
                     onError={(e) => {
                       e.target.src = "/default-avatar.png";
                     }}
@@ -187,19 +297,19 @@ const PersonalDetails = () => {
                     onChange={handleProfilePictureChange}
                     disabled={!isEditing}
                   />
-                </div>
+                </motion.div>
                 {isEditing && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     Click to upload new photo
                   </p>
                 )}
               </div>
 
               {/* Form Fields */}
-              <div className="flex-1 space-y-6">
-                <div className="grid grid-cols-1 gap-6">
+              <div className="flex-1 space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                       Username
                     </label>
                     <input
@@ -208,7 +318,7 @@ const PersonalDetails = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-3 rounded-lg border transition-colors duration-200 ${
+                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border transition-colors duration-200 ${
                         isEditing
                           ? "border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 dark:border-green-600"
                           : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
@@ -216,7 +326,7 @@ const PersonalDetails = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                       Email Address
                     </label>
                     <input
@@ -225,7 +335,7 @@ const PersonalDetails = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      className={`w-full px-4 py-3 rounded-lg border transition-colors duration-200 ${
+                      className={`w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg border transition-colors duration-200 ${
                         isEditing
                           ? "border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 dark:border-green-600"
                           : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
@@ -235,86 +345,47 @@ const PersonalDetails = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-4 pt-4">
+                <div className="flex justify-end space-x-3 sm:space-x-4 pt-2 sm:pt-4">
                   {isEditing ? (
                     <>
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => setIsEditing(false)}
-                        className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                        className="px-4 sm:px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm sm:text-base"
                       >
                         Cancel
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                       >
                         {isSaving ? "Saving..." : "Save Changes"}
-                      </button>
+                      </motion.button>
                     </>
                   ) : (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => setIsEditing(true)}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+                      className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm sm:text-base"
                     >
                       Edit Profile
-                    </button>
+                    </motion.button>
                   )}
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Additional Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Subscription Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Newsletter Subscription
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Stay updated with our latest products and offers by subscribing
-                to our newsletter.
-              </p>
-              <button className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
-                Subscribe Now
-              </button>
-            </div>
 
-            {/* Security Section */}
-            <div className="space-y-8">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Security
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Manage your account security and password settings.
-                </p>
-                <button
-                  onClick={() => (window.location.href = "/account/password")}
-                  className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-                >
-                  Change Password
-                </button>
-              </div>
-
-              {/* Danger Zone */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border-t-4 border-red-500">
-                <h3 className="text-xl font-semibold text-red-600 mb-4">
-                  Danger Zone
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Once you delete your account, there is no going back. Please
-                  be certain.
-                </p>
-                <button className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
-                  Delete Account
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Shipping and Payment Info */}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
